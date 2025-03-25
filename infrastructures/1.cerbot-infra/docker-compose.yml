@@ -1,0 +1,9 @@
+services:
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'certbot certonly --standalone --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn1.crabdance.com && trap exit TERM; while :; do certbot renew --standalone; sleep 30d & wait $${!}; done;'"
+    ports:
+      - "80:80"
