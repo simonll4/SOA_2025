@@ -42,7 +42,7 @@ services:
       /bin/sh -c "
         if [ ! -f /etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem ]; then
           echo 'Certificado no encontrado. Creando uno nuevo...';
-          certbot certonly --webroot -w /var/www/certbot --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn3.crabdance.com;
+          certbot certonly --webroot -w /var/www/certbot --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn2.crabdance.com;
         else
           echo 'Certificado ya existe. Saltando creación...';
         fi;
@@ -53,7 +53,7 @@ services:
           sleep 30d & wait $${!};
         done;" 
     healthcheck:
-      test: [ "CMD", "test", "-f", "/etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem" ]
+      test: [ "CMD", "test", "-f", "/etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem" ]
       interval: 30s
       timeout: 10s
       retries: 5

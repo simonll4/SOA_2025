@@ -1,0 +1,137 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx:1.23.3
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - grafana-network
+    depends_on:
+      - grafana
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c "
+        if [ ! -f /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem ]; then
+          certbot certonly --webroot -w /var/www/certbot --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn3.crabdance.com;
+        fi;
+        trap exit TERM;
+        while :; do
+          certbot renew --webroot -w /var/www/certbot;
+          sleep 30d & wait $${!};
+        done;"
+    depends_on:
+      - nginx
+    networks:
+      - grafana-network
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: always
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - grafana-network
+    environment:
+      - GF_SERVER_ROOT_URL=https://lpn3.crabdance.com
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+
+networks:
+  grafana-network:
+    driver: bridge
+
+volumes:
+  grafana-storage:
+
+
+# services:
+  
+#   nginx:
+#     image: nginx:1.23.3
+#     container_name: nginx
+#     restart: always
+#     links:
+#       - "grafana"
+#     depends_on:
+#       grafana:
+#         condition: service_started
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     volumes:
+#       - ./nginx:/etc/nginx/conf.d
+#       - ./certbot/conf:/etc/letsencrypt
+#       - ./certbot/www:/var/www/certbot
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+#       start_period: 30s
+
+#   certbot:
+#     image: certbot/certbot
+#     container_name: certbot
+#     depends_on:
+#       nginx:
+#         condition: service_healthy
+#     volumes:
+#       - ./certbot/conf:/etc/letsencrypt
+#       - ./certbot/www:/var/www/certbot
+#     entrypoint: >
+#       /bin/sh -c "
+#         if [ ! -f /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem ]; then
+#           echo 'Certificado no encontrado. Creando uno nuevo...';
+#           certbot certonly --webroot -w /var/www/certbot --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn3.crabdance.com;
+#         else
+#           echo 'Certificado ya existe. Saltando creación...';
+#         fi;
+#         trap exit TERM;
+#         while :; do
+#           echo 'Verificando renovación del certificado...';
+#           certbot renew --webroot -w /var/www/certbot;
+#           sleep 30d & wait $${!};
+#         done;"
+#     healthcheck:
+#       test:
+#         [
+#           "CMD",
+#           "test",
+#           "-f",
+#           "/etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem",
+#         ]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+#       start_period: 30s
+
+#   grafana:
+#     image: grafana/grafana-oss:latest
+#     volumes:
+#       - grafana-storage:/var/lib/grafana:rw
+#     expose:
+#       - "3000"
+
+# volumes:
+#   grafana-storage:
+
+
+    #environment:
+    #  - GF_SERVER_ROOT_URL=https://lpn3.crabdance.com/grafana
+    #  - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    #  - GF_SERVER_PROTOCOL=http
+     # - GF_SERVER_HTTP_PORT=3000

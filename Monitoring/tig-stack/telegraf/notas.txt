@@ -1,0 +1,17 @@
+./telegraf.conf:/etc/telegraf/telegraf.conf
+    * Está correcto si tienes un archivo telegraf.conf en el mismo directorio donde está el docker-compose.yml.
+
+    * Asegúrate de que el archivo tiene los permisos adecuados (chmod 644 telegraf.conf).
+
+/var/run/docker.sock:/var/run/docker.sock
+
+    * Este volumen permite a Telegraf monitorear contenedores Docker.
+
+    * Si Telegraf está configurado para recopilar métricas de Docker, es necesario.
+
+/:/hostfs:ro
+
+    * Esto monta el sistema de archivos del host dentro del contenedor en modo solo lectura (ro).
+
+    * Se usa cuando Telegraf necesita acceder a métricas del sistema, como CPU, memoria y disco.
+

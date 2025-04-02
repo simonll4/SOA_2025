@@ -1,0 +1,91 @@
+
+services:
+  nginx:
+    image: nginx:1.23.3
+    container_name: nginx
+    restart: always
+    links:
+      - "influxdb2"
+    depends_on:
+      influxdb2:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    depends_on:
+      nginx:
+        condition: service_healthy
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c "
+        if [ ! -f /etc/letsencrypt/live/lpn1.crabdance.com/fullchain.pem ]; then
+          echo 'Certificado no encontrado. Creando uno nuevo...';
+          certbot certonly --webroot -w /var/www/certbot --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn1.crabdance.com;
+        else
+          echo 'Certificado ya existe. Saltando creación...';
+        fi;
+        trap exit TERM;
+        while :; do
+          echo 'Verificando renovación del certificado...';
+          certbot renew --webroot -w /var/www/certbot;
+          sleep 30d & wait $${!};
+        done;"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/etc/letsencrypt/live/lpn1.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  influxdb2:
+    image: influxdb:2.7-alpine
+    container_name: influxdb2
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_ADMIN_USER}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_ADMIN_TOKEN}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET}
+      TZ: ${TZ}
+    volumes:
+      - influxdb2-data:/var/lib/influxdb2
+      - influxdb2-config:/etc/influxdb2
+    expose:
+      - "8086"
+    healthcheck:
+      test:
+        ["CMD", "influx", "ping", "--host", "http://localhost:8086", "--http-debug"]
+      interval: 20s
+      timeout: 8s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  influxdb2-data:
+  influxdb2-config:

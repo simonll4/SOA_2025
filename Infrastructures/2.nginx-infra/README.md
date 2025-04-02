@@ -27,4 +27,5 @@ Este script:
 
 ## Pendiente
 - Modificar `init.sh` para que no requiera `sudo`.
+- Implementar un mecanismo para verificar la finalización del contenedor de Certbot antes de continuar con el flujo de ejecución.
 
