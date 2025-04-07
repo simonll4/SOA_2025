@@ -4,6 +4,34 @@
 GREEN='\033[38;5;46m'
 NC='\033[0m' # Sin color
 
+wait_for_container_healthy() {
+    local CONTAINER_NAME=$1
+    local TIMEOUT=${2:-300} # Tiempo máximo de espera en segundos (por defecto 5 minutos)
+    local INTERVAL=5        # Intervalo entre verificaciones
+
+    echo "${GREEN}Esperando a que $CONTAINER_NAME esté en estado healthy...${NC}"
+
+    local START_TIME=$(date +%s)
+    while true; do
+        STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null)
+
+        if [ "$STATUS" = "healthy" ]; then
+            echo "${GREEN}$CONTAINER_NAME está listo.${NC}"
+            return 0
+        fi
+
+        local CURRENT_TIME=$(date +%s)
+        local ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+
+        if [ $ELAPSED_TIME -ge $TIMEOUT ]; then
+            echo "${RED}Tiempo de espera agotado para $CONTAINER_NAME${NC}"
+            return 1
+        fi
+
+        sleep $INTERVAL
+    done
+}
+
 # CHECK-RENEW-CERT.SH
 RENEW_CERT_SCRIPT="check-renew-cert.sh"
 if [ ! -f "$RENEW_CERT_SCRIPT" ]; then
@@ -50,19 +78,18 @@ fi
 cp ./nginx/default.conf.no-ssl ./nginx/default.conf
 
 # Iniciar servicios
-echo "${GREEN}Iniciando servicio grafana...${NC}"
 docker compose up -d grafana
 
 # Iniciar Nginx sin SSL
-echo "${GREEN}Iniciando Nginx sin SSL...${NC}"
 docker compose up -d nginx
+if ! wait_for_container_healthy "nginx"; then
+    exit 1
+fi
 
-echo "${GREEN}Ejecutando Certbot para obtener los certificados...${NC}"
 docker compose up -d certbot
-
-# Esperar unos segundos para que Certbot termine
-echo "${GREEN}Esperando a que Certbot termine...${NC}"
-sleep 80
+if ! wait_for_container_healthy "certbot"; then
+    exit 1
+fi
 
 # Verificar si los archivos del certificado existen
 CERT_PATH="/home/user/SOA2025/grafana/certbot/conf/live/lpn3.crabdance.com/fullchain.pem"
@@ -99,23 +126,3 @@ fi
 # Ejecutar el archivo check-renew-cert.sh en segundo plano
 echo "${GREEN}Ejecutando check-renew-cert.sh para crear copia de respaldo de certificado${NC}"
 ./check-renew-cert.sh &
-
-
-
-# CONTAINER_NAME="nombre_del_contenedor_certbot"
-
-# echo "Esperando a que $CONTAINER_NAME esté en estado healthy..."
-
-# while true; do
-#     STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null)
-
-#     if [[ "$STATUS" == "healthy" ]]; then
-#         echo "$CONTAINER_NAME está listo."
-#         break
-#     fi
-
-#     echo "Estado actual: $STATUS. Reintentando en 5 segundos..."
-#     sleep 5
-# done
-
-# echo "Continuando con el script..."
