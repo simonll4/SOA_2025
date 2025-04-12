@@ -58,6 +58,7 @@ fi
 
 cp ./nginx/default.conf.no-ssl ./nginx/default.conf
 docker compose up -d influxdb2
+
 docker compose up -d nginx
 wait_for_container_healthy "nginx" || exit 1
 

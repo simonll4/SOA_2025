@@ -19,8 +19,8 @@ services:
       - "443:443"
     volumes:
       - ./nginx:/etc/nginx/conf.d
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 30s
@@ -35,8 +35,8 @@ services:
       nginx:
         condition: service_healthy
     volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
     entrypoint: >
       /bin/sh -c "
         if [ ! -f /etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem ]; then
@@ -58,6 +58,55 @@ services:
           "test",
           "-f",
           "/etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  #certbot sidecar container
+  cert-exporter:
+    image: alpine:latest
+    container_name: cert-exporter
+    depends_on:
+      certbot:
+        condition: service_healthy
+    volumes:
+      - certbot-conf:/etc/letsencrypt:ro
+      - ./certs:/exported-certs
+    entrypoint: >
+      /bin/sh -c "
+        mkdir -p /exported-certs/lpn2.crabdance.com;
+
+        # Usar symlinks desde /etc/letsencrypt/live (que siempre apuntan al archivo más nuevo)
+        cp /etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem /exported-certs/lpn2.crabdance.com/fullchain.pem;
+        cp /etc/letsencrypt/live/lpn2.crabdance.com/privkey.pem /exported-certs/lpn2.crabdance.com/privkey.pem;
+
+        chmod 644 /exported-certs/lpn2.crabdance.com/*.pem;
+        chmod 755 /exported-certs /exported-certs/lpn2.crabdance.com;
+        chown -R 1000:1000 /exported-certs;
+
+        trap exit TERM;
+        while :; do
+          echo 'Actualizando certificados exportados...';
+
+          cp /etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem /exported-certs/lpn2.crabdance.com/fullchain.pem;
+          cp /etc/letsencrypt/live/lpn2.crabdance.com/privkey.pem /exported-certs/lpn2.crabdance.com/privkey.pem;
+
+          chmod 644 /exported-certs/lpn2.crabdance.com/*.pem;
+          chmod 755 /exported-certs /exported-certs/lpn2.crabdance.com;
+          chown -R 1000:1000 /exported-certs;
+
+          sleep 30d & wait $${!};
+        done;
+      "
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/exported-certs/lpn2.crabdance.com/fullchain.pem",
         ]
       interval: 30s
       timeout: 10s
@@ -123,7 +172,7 @@ services:
     container_name: telegraf
     hostname: lpn2
     restart: always
-    user: "telegraf:docker"
+    user: "telegraf:999"
     depends_on:
       nginx:
         condition: service_started
@@ -145,4 +194,6 @@ services:
       - /:/hostfs:ro
 
 volumes:
+  certbot-conf:
+  certbot-www:
   mysql-data-iw3:
