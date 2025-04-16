@@ -1,0 +1,121 @@
+services:
+  nginx1:
+    image: nginx:1.23.3
+    container_name: nginx1
+    restart: always
+    links:
+      - "nodered"
+    depends_on:
+      nodered:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - certbot-conf1:/etc/letsencrypt
+      - certbot-www1:/var/www/certbot
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  certbot1:
+    image: certbot/certbot
+    container_name: certbot1
+    depends_on:
+      nginx1:
+        condition: service_healthy
+    volumes:
+      - certbot-conf1:/etc/letsencrypt
+      - certbot-www1:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c "
+        if [ ! -f /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem ]; then
+          echo 'Certificado no encontrado. Creando uno nuevo...';
+          certbot certonly --webroot -w /var/www/certbot --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn3.crabdance.com;
+        else
+          echo 'Certificado ya existe. Saltando creación...';
+        fi;
+        trap exit TERM;
+        while :; do
+          echo 'Verificando renovación del certificado...';
+          certbot renew --webroot -w /var/www/certbot;
+          sleep 30d & wait $${!};
+        done;"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  #certbot sidecar container
+  cert-exporter1:
+    image: alpine:latest
+    container_name: cert-exporter1
+    depends_on:
+      certbot1:
+        condition: service_healthy
+    volumes:
+      - certbot-conf1:/etc/letsencrypt:ro
+      - ./certs:/exported-certs
+    entrypoint: >
+      /bin/sh -c "
+        mkdir -p /exported-certs/lpn3.crabdance.com;
+
+        # Usar symlinks desde /etc/letsencrypt/live (que siempre apuntan al archivo más nuevo)
+        cp /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem /exported-certs/lpn3.crabdance.com/fullchain.pem;
+        cp /etc/letsencrypt/live/lpn3.crabdance.com/privkey.pem /exported-certs/lpn3.crabdance.com/privkey.pem;
+
+        chmod 644 /exported-certs/lpn3.crabdance.com/*.pem;
+        chmod 755 /exported-certs /exported-certs/lpn3.crabdance.com;
+        chown -R 1000:1000 /exported-certs;
+
+        trap exit TERM;
+        while :; do
+          echo 'Actualizando certificados exportados...';
+
+          cp /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem /exported-certs/lpn3.crabdance.com/fullchain.pem;
+          cp /etc/letsencrypt/live/lpn3.crabdance.com/privkey.pem /exported-certs/lpn3.crabdance.com/privkey.pem;
+
+          chmod 644 /exported-certs/lpn3.crabdance.com/*.pem;
+          chmod 755 /exported-certs /exported-certs/lpn3.crabdance.com;
+          chown -R 1000:1000 /exported-certs;
+
+          sleep 30d & wait $${!};
+        done;
+      "
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/exported-certs/lpn3.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    restart: always
+    expose:
+      - "1880"
+    volumes:
+      - ./nodered-data:/data
+
+volumes:
+  certbot-conf1:
+  certbot-www1:

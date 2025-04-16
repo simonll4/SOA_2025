@@ -17,7 +17,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=1u4iwE
 
   mysql:
-    image: mysql:latest
+    image: mysql:8.0
     container_name: mysql
     restart: always
     environment:
@@ -30,7 +30,8 @@ services:
     volumes:
       - mysql-data-iw3:/var/lib/mysql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p1u4iwE" ]
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p1u4iwE"]
       interval: 30s
       timeout: 10s
       retries: 4
@@ -43,6 +44,15 @@ services:
       - TZ=America/Argentina/Buenos_Aires
     ports:
       - 8080:8080
+
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    restart: always
+    ports:
+      - 1880:1880
+    volumes:
+      - ./nodered-data:/data
 
 volumes:
   mysql-data-iw3:

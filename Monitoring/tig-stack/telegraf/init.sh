@@ -69,7 +69,7 @@ fi
 cp ./nginx/default.conf.no-ssl ./nginx/default.conf
 
 # Iniciar servicios
-docker compose up -d mysql backend nodered adminer telegraf
+docker compose up -d mysql backend adminer telegraf
 
 # Iniciar Nginx sin SSL
 docker compose up -d nginx

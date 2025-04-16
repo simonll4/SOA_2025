@@ -16,6 +16,12 @@ services:
       - grafana-network
     depends_on:
       - grafana
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
   certbot:
     image: certbot/certbot
@@ -37,6 +43,18 @@ services:
       - nginx
     networks:
       - grafana-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
   #certbot sidecar container
   cert-exporter:
@@ -85,7 +103,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 10s
 
   grafana:
     image: grafana/grafana-oss:latest
