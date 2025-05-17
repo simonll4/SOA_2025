@@ -1,0 +1,583 @@
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: Container RAM Alert
+      folder: Alerts/RAM Alerts/Docker Containers
+      interval: 1m
+      rules:
+        - uid: beifzytmj0q9sc
+          title: Adminer RAM Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_mem")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /adminer/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 70
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: YIIzB274z
+          panelId: 10
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            __dashboardUid__: YIIzB274z
+            __panelId__: "10"
+            description: "El uso de memoria en el contenedor Adminer ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 70%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de RAM en el contenedor Adminer"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: aeig02smbrjswd
+          title: Certbot RAM Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_mem")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /certbot/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 70
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            description: "El uso de memoria en el contenedor Certbot ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 70%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de RAM en el contenedor Certbot"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: beig09of84w74c
+          title: Telegraf RAM Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_mem")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /telegraf/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 70
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: YIIzB274z
+          panelId: 10
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            __dashboardUid__: YIIzB274z
+            __panelId__: "10"
+            description: "El uso de memoria en el contenedor Telegraf ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 70%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de RAM en el contenedor Telegraf"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: beig0dohxsrnka
+          title: Nginx RAM Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_mem")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /nginx/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 70
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            description: "El uso de memoria en el contenedor Nginx ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 70%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de RAM en el contenedor Nginx"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: deig0i0d67eo0c
+          title: Backend RAM Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_mem")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /backend/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 70
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: YIIzB274z
+          panelId: 10
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            __dashboardUid__: YIIzB274z
+            __panelId__: "10"
+            description: "El uso de memoria en el contenedor Backend ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 70%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de RAM en el contenedor Backend"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: deig0lgxex9fkd
+          title: Nodered RAM Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_mem")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /nodered/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 70
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: YIIzB274z
+          panelId: 10
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            __dashboardUid__: YIIzB274z
+            __panelId__: "10"
+            description: "El uso de memoria en el contenedor Nodered ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 70%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de RAM en el contenedor Nodered"
+          isPaused: true
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: eeig0oh93wj5sb
+          title: MySQL RAM Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_mem")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /mysql/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 70
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            description: "El uso de memoria en el contenedor MySQL ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 70%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de RAM en el contenedor MySQL"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails

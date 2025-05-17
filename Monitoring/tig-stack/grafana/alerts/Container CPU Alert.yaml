@@ -1,0 +1,507 @@
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: Container CPU Alert
+      folder: Alerts/CPU Alerts/Docker Containers
+      interval: 1m
+      rules:
+        - uid: feify81ksbsaod
+          title: Telegraf CPU Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |-
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_cpu")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /telegraf/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 50
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: YIIzB274z
+          panelId: 2
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            __dashboardUid__: YIIzB274z
+            __panelId__: "2"
+            description: "El uso de CPU en el contenedor Telegraf ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 50%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de CPU en el contenedor Telegraf"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: beifybo8i4gsgf
+          title: Certbot Cpu Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |-
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_cpu")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /certbot/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 50
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: YIIzB274z
+          panelId: 2
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            __dashboardUid__: YIIzB274z
+            __panelId__: "2"
+            description: "El uso de CPU en el contenedor Certbot ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 50%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de CPU en el contenedor Certbot"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: aeifyfnkavq4gf
+          title: Nginx Cpu Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |-
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_cpu")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /nginx/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 50
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            description: "El uso de CPU en el contenedor Nginx ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 50%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de CPU en el contenedor Nginx"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: feifyk7d6ocn4e
+          title: Backend Cpu Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |-
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_cpu")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /backend/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 50
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: YIIzB274z
+          panelId: 2
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            __dashboardUid__: YIIzB274z
+            __panelId__: "2"
+            description: "El uso de CPU en el contenedor Backend ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 50%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de CPU en el contenedor Backend"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: deifypi9abv28d
+          title: Adminer Cpu Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |-
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_cpu")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /adminer/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 50
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: YIIzB274z
+          panelId: 2
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            __dashboardUid__: YIIzB274z
+            __panelId__: "2"
+            description: "El uso de CPU en el contenedor Adminer ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 50%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de CPU en el contenedor Adminer"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails
+        - uid: eeifyvdz10d8gb
+          title: MySQL Cpu Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: fehnonvokrw8wb
+              model:
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: |-
+                    from(bucket: "monitoring-lpn2")
+                      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                      |> filter(fn: (r) => r["_measurement"] == "docker_container_cpu")
+                      |> filter(fn: (r) => r["_field"] == "usage_percent")
+                      |> filter(fn: (r) => r["container_name"] =~ /mysql/)
+                      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+                      |> yield(name: "mean")
+                refId: A
+            - refId: B
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - B
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 50
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: YIIzB274z
+          panelId: 2
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            __dashboardUid__: YIIzB274z
+            __panelId__: "2"
+            description: "El uso de CPU en el contenedor MySQL ha superado el umbral definido.\n\n\U0001F539 Uso actual: {{ $values.B }}%\n\U0001F539 Umbral: > 50%"
+            summary: "\U0001F6A8 Alerta: Uso elevado de CPU en el contenedor MySQL"
+          isPaused: false
+          notification_settings:
+            receiver: infra-team-emails

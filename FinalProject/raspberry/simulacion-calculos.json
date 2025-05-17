@@ -1,0 +1,84 @@
+[
+    {
+        "id": "8b1d999f74d86abd",
+        "type": "tab",
+        "label": "prueba-calculos-vol_caudal_eta",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "inject_simulacion",
+        "type": "inject",
+        "z": "8b1d999f74d86abd",
+        "name": "Iniciar simulación",
+        "props": [],
+        "repeat": "2",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "x": 150,
+        "y": 220,
+        "wires": [
+            [
+                "function_simulador"
+            ]
+        ]
+    },
+    {
+        "id": "function_simulador",
+        "type": "function",
+        "z": "8b1d999f74d86abd",
+        "name": "Simulador altura y temp",
+        "func": "// Inicializa o recupera altura, dirección y estado de ejecución (running)\n// Si está corriendo, actualiza la altura sumando o restando el paso\n// Cambia dirección al llegar a los límites (mínimo o máximo)\n// Guarda estado actualizado en contexto\n// Devuelve payload con altura y temperatura simulada\n\n\n// Estado persistente\nlet altura = context.get('altura') || 0;\nlet direccion = context.get('direccion') || 1; // 1=subiendo, -1=bajando\n\nconst paso = 1; // cm por ciclo\nconst alturaMin = 0;\nconst alturaMax = 20;\n\n// Actualizar altura\naltura += direccion * paso;\n\n// Cambiar dirección si se pasa límites\nif (altura >= alturaMax) {\n    altura = alturaMax;\n    direccion = -1;\n} else if (altura <= alturaMin) {\n    altura = alturaMin;\n    direccion = 1;\n}\n\n// Guardar estado\ncontext.set('altura', altura);\ncontext.set('direccion', direccion);\n\nmsg.payload = { altura_cm: altura, temperatura_c: 25 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 220,
+        "wires": [
+            [
+                "function_calculos"
+            ]
+        ]
+    },
+    {
+        "id": "function_calculos",
+        "type": "function",
+        "z": "8b1d999f74d86abd",
+        "name": "Calcular Volumen, Caudal y ETA",
+        "func": "// Nodo cálculo de volumen, caudal y ETA\n// 1. Interpola el volumen según la altura usando la tabla de calibración\n// 2. Ajusta el volumen interpolado según la temperatura ambiente (coef. expansión volumétrica)\n// 3. Limita el volumen ajustado para que no supere el máximo ni sea negativo\n// 4. Calcula el caudal (litros por segundo) como cambio de volumen dividido por tiempo transcurrido\n// 5. Calcula ETA:\n//    - Si se está llenando (caudal positivo), estima tiempo restante para llenar el recipiente\n//    - Si se está vaciando (caudal negativo), estima tiempo para vaciar completamente\n//    - Si el caudal es muy pequeño, ETA se pone en 0\n// 6. Guarda el volumen y timestamp actuales en contexto para la próxima iteración\n// 7. Devuelve un mensaje con altura, temperatura, volumen ajustado, caudal y ETA formateados\n\n\n// Tabla calibracion\nconst tablaCalibracion = [\n    { altura: 0, volumen: 0 },\n    { altura: 5, volumen: 2 },\n    { altura: 10, volumen: 6 },\n    { altura: 15, volumen: 11 },\n    { altura: 20, volumen: 17 }\n];\n\nconst beta = 0.000214; // coef. expansión volumétrica\nconst tempReferencia = 20;\n\nlet altura = msg.payload.altura_cm;\nlet temperatura = msg.payload.temperatura_c;\nlet timestamp = Date.now();\n\nfunction interpolarVolumen(tabla, h) {\n    for (let i = 0; i < tabla.length - 1; i++) {\n        let a = tabla[i];\n        let b = tabla[i + 1];\n        if (h >= a.altura && h <= b.altura) {\n            let frac = (h - a.altura) / (b.altura - a.altura);\n            return a.volumen + frac * (b.volumen - a.volumen);\n        }\n    }\n    if (h < tabla[0].altura) return tabla[0].volumen;\n    if (h > tabla[tabla.length - 1].altura) return tabla[tabla.length - 1].volumen;\n    return 0;\n}\n\nlet volumen0 = interpolarVolumen(tablaCalibracion, altura);\n\n// Fórmula de corrección\nlet volumenAjustado = volumen0 * (1 + beta * (temperatura - tempReferencia));\n\nlet volumenMax = tablaCalibracion[tablaCalibracion.length - 1].volumen;\nif (volumenAjustado > volumenMax) volumenAjustado = volumenMax;\nif (volumenAjustado < 0) volumenAjustado = 0;\n\nlet contexto = context.get(\"prev\") || {};\nlet deltaT = (timestamp - (contexto.timestamp || timestamp)) / 1000;\nlet deltaV = volumenAjustado - (contexto.volumen || volumenAjustado);\nlet caudal = deltaT > 0 ? deltaV / deltaT : 0;\n\nlet eta = 0;\nif (Math.abs(caudal) > 0.001) {\n    if (caudal > 0) {\n        let volumenRestante = volumenMax - volumenAjustado;\n        eta = volumenRestante > 0 ? volumenRestante / caudal : 0;\n    } else {\n        eta = volumenAjustado > 0 ? volumenAjustado / Math.abs(caudal) : 0;\n    }\n} else {\n    eta = 0;\n}\n\ncontext.set(\"prev\", { volumen: volumenAjustado, timestamp: timestamp });\n\nmsg.payload = {\n    altura_cm: altura,\n    temperatura_c: temperatura,\n    volumen_L: volumenAjustado.toFixed(2),\n    caudal_Lps: caudal.toFixed(3),\n    ETA_segundos: eta.toFixed(1)\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 220,
+        "wires": [
+            [
+                "debug_salida"
+            ]
+        ]
+    },
+    {
+        "id": "debug_salida",
+        "type": "debug",
+        "z": "8b1d999f74d86abd",
+        "name": "Resultado",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 1040,
+        "y": 220,
+        "wires": []
+    }
+]
