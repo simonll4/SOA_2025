@@ -1,0 +1,33 @@
+[
+  {
+    "id": "container_001",
+    "height": 24.5,
+    "calibration_table": [
+      { "height": 0, "volume": 0.0 },
+      { "height": 1, "volume": 0.03 },
+      { "height": 2, "volume": 0.1 },
+      { "height": 3, "volume": 0.22 },
+      { "height": 4, "volume": 0.4 },
+      { "height": 5, "volume": 0.63 },
+      { "height": 6, "volume": 0.92 },
+      { "height": 7, "volume": 1.28 },
+      { "height": 8, "volume": 1.7 },
+      { "height": 9, "volume": 2.18 },
+      { "height": 10, "volume": 2.72 },
+      { "height": 11, "volume": 3.33 },
+      { "height": 12, "volume": 4.0 },
+      { "height": 13, "volume": 4.74 },
+      { "height": 14, "volume": 5.54 },
+      { "height": 15, "volume": 6.4 },
+      { "height": 16, "volume": 7.33 },
+      { "height": 17, "volume": 8.32 },
+      { "height": 18, "volume": 9.38 },
+      { "height": 19, "volume": 10.5 },
+      { "height": 20, "volume": 11.68 },
+      { "height": 21, "volume": 12.93 },
+      { "height": 22, "volume": 14.24 },
+      { "height": 23, "volume": 15.62 },
+      { "height": 24, "volume": 17.06 }
+    ]
+  }
+]
