@@ -1,0 +1,6 @@
+
+# cifrar raw passwords a usar en el broker
+    - mosquitto_passwd -U <archivo>
+
+
+    

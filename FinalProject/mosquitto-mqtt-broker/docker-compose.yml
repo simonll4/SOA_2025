@@ -1,0 +1,10 @@
+services:
+  mosquitto-SOA:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto-SOA
+    restart: always
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    network_mode: host
