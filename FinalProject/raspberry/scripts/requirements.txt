@@ -1,4 +1,5 @@
 bme280pi==1.1.2
 numpy==2.2.6
+pigpio==1.78
 RPi.GPIO==0.7.1
 smbus==1.1.post2

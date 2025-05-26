@@ -1,1 +1,10 @@
 https://github.com/MarcoAndreaBuchmann/bme280pi
+
+
+# RGB
+RED -> GPIO12
+GREEN -> GPIO13
+BLUE -> GPIO18
+
+LED -> GPIO26
+

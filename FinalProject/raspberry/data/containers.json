@@ -1,7 +1,7 @@
 [
   {
     "id": "container_001",
-    "height": 24.0,
+    "height": 23.0,
     "sensor_height": 25.89,
     "thresholds": {
       "low_low": 0.1,

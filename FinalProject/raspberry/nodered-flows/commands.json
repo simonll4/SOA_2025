@@ -1,0 +1,314 @@
+[
+    {
+        "id": "98d82d4840a1c85d",
+        "type": "tab",
+        "label": "Commands",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "1b1ab957f17e87b1",
+        "type": "rpi-gpio out",
+        "z": "98d82d4840a1c85d",
+        "name": "",
+        "pin": "26",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "bcm": true,
+        "x": 500,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "17f5eec5c2f272e0",
+        "type": "function",
+        "z": "98d82d4840a1c85d",
+        "name": "RGB → PWM %",
+        "func": "let [r, g, b] = msg.payload.split(',').map(n => parseInt(n));\nif ([r, g, b].some(x => isNaN(x) || x < 0 || x > 255)) {\n    node.error(\"RGB inválido\", msg);\n    return null;\n}\n\n// Escalar de 0–255 a 0–100 (PWM en porcentaje)\nr = Math.round(r / 255 * 100);\ng = Math.round(g / 255 * 100);\nb = Math.round(b / 255 * 100);\n\nreturn [\n    { payload: r },\n    { payload: g },\n    { payload: b }\n];\n",
+        "outputs": 3,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 300,
+        "wires": [
+            [
+                "3a3d0a4e1571c703"
+            ],
+            [
+                "327a770bc93acfeb"
+            ],
+            [
+                "a0dd6c8b6fc78043"
+            ]
+        ]
+    },
+    {
+        "id": "3a3d0a4e1571c703",
+        "type": "rpi-gpio out",
+        "z": "98d82d4840a1c85d",
+        "name": "PWM R (GPIO12)",
+        "pin": "12",
+        "set": true,
+        "level": "0",
+        "freq": "1000",
+        "out": "pwm",
+        "bcm": true,
+        "x": 750,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "327a770bc93acfeb",
+        "type": "rpi-gpio out",
+        "z": "98d82d4840a1c85d",
+        "name": "PWM G (GPIO13)",
+        "pin": "13",
+        "set": true,
+        "level": "0",
+        "freq": "1000",
+        "out": "pwm",
+        "bcm": true,
+        "x": 750,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "a0dd6c8b6fc78043",
+        "type": "rpi-gpio out",
+        "z": "98d82d4840a1c85d",
+        "name": "PWM B (GPIO18)",
+        "pin": "18",
+        "set": false,
+        "level": "0",
+        "freq": "1000",
+        "out": "pwm",
+        "bcm": true,
+        "x": 750,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "exec_servo",
+        "type": "exec",
+        "z": "98d82d4840a1c85d",
+        "command": "python3 /home/simonll4/python/servo.py",
+        "addpay": "payload.degrees",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "name": "Ejecutar servo_angle.py",
+        "x": 350,
+        "y": 420,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "325c8318e611fa65",
+        "type": "mqtt in",
+        "z": "98d82d4840a1c85d",
+        "name": "",
+        "topic": "move-servo",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "5adc8ec081586556",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 110,
+        "y": 420,
+        "wires": [
+            [
+                "exec_servo",
+                "74ae7698357741df"
+            ]
+        ]
+    },
+    {
+        "id": "74ae7698357741df",
+        "type": "debug",
+        "z": "98d82d4840a1c85d",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 300,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "f7b570b42a4ad4a3",
+        "type": "mqtt in",
+        "z": "98d82d4840a1c85d",
+        "name": "",
+        "topic": "led",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "5adc8ec081586556",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 90,
+        "y": 80,
+        "wires": [
+            [
+                "e8faccdc7bb44584",
+                "130f0463f3820edb"
+            ]
+        ]
+    },
+    {
+        "id": "f7d1db6ed1881a6b",
+        "type": "mqtt in",
+        "z": "98d82d4840a1c85d",
+        "name": "",
+        "topic": "rgb",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "5adc8ec081586556",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 90,
+        "y": 300,
+        "wires": [
+            [
+                "8f7dc9ba08d9c798",
+                "fdf564e0886b75e5"
+            ]
+        ]
+    },
+    {
+        "id": "e8faccdc7bb44584",
+        "type": "debug",
+        "z": "98d82d4840a1c85d",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 300,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "8f7dc9ba08d9c798",
+        "type": "debug",
+        "z": "98d82d4840a1c85d",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 300,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "130f0463f3820edb",
+        "type": "change",
+        "z": "98d82d4840a1c85d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.action",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 320,
+        "y": 80,
+        "wires": [
+            [
+                "1b1ab957f17e87b1"
+            ]
+        ]
+    },
+    {
+        "id": "fdf564e0886b75e5",
+        "type": "change",
+        "z": "98d82d4840a1c85d",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.rgb",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 320,
+        "y": 300,
+        "wires": [
+            [
+                "17f5eec5c2f272e0"
+            ]
+        ]
+    },
+    {
+        "id": "5adc8ec081586556",
+        "type": "mqtt-broker",
+        "name": "BROKER LPN2",
+        "broker": "192.168.192.162",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]

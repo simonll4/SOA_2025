@@ -1,0 +1,182 @@
+[
+    {
+        "id": "c08cc006a3992541",
+        "type": "tab",
+        "label": "auto-config",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "ec37ebfd4c79b8bf",
+        "type": "file in",
+        "z": "c08cc006a3992541",
+        "name": "",
+        "filename": "/home/simonll4/raspberry/config/config.json",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "utf8",
+        "allProps": false,
+        "x": 510,
+        "y": 240,
+        "wires": [
+            [
+                "fd5ada02f46888ec"
+            ]
+        ]
+    },
+    {
+        "id": "fd5ada02f46888ec",
+        "type": "json",
+        "z": "c08cc006a3992541",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 790,
+        "y": 240,
+        "wires": [
+            [
+                "7be3e398df88f9af"
+            ]
+        ]
+    },
+    {
+        "id": "7be3e398df88f9af",
+        "type": "change",
+        "z": "c08cc006a3992541",
+        "name": "set global config",
+        "rules": [
+            {
+                "t": "set",
+                "p": "config",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 980,
+        "y": 240,
+        "wires": [
+            [
+                "38bf80c232b03b6f"
+            ]
+        ]
+    },
+    {
+        "id": "38bf80c232b03b6f",
+        "type": "link out",
+        "z": "c08cc006a3992541",
+        "name": "config changed",
+        "mode": "link",
+        "links": [],
+        "x": 1145,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "91bfe31afa342f8b",
+        "type": "inject",
+        "z": "c08cc006a3992541",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 190,
+        "y": 240,
+        "wires": [
+            [
+                "ec37ebfd4c79b8bf"
+            ]
+        ]
+    },
+    {
+        "id": "85baa456b87769d9",
+        "type": "watch",
+        "z": "c08cc006a3992541",
+        "name": "",
+        "files": "/home/simonll4/raspberry/config/config.json",
+        "recursive": "",
+        "x": 240,
+        "y": 140,
+        "wires": [
+            [
+                "ec37ebfd4c79b8bf"
+            ]
+        ]
+    },
+    {
+        "id": "5a082c2469833c8f",
+        "type": "catch",
+        "z": "c08cc006a3992541",
+        "name": "",
+        "scope": [
+            "ec37ebfd4c79b8bf"
+        ],
+        "uncaught": false,
+        "x": 130,
+        "y": 80,
+        "wires": [
+            [
+                "9fc4300d06d52167"
+            ]
+        ]
+    },
+    {
+        "id": "9fc4300d06d52167",
+        "type": "function",
+        "z": "c08cc006a3992541",
+        "name": "default config",
+        "func": "msg.payload={\n    \"id\":\"\",\n    \"action\":-1,\n    \"preset\":-1,\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 80,
+        "wires": [
+            [
+                "df877768aba98bfb"
+            ]
+        ]
+    },
+    {
+        "id": "df877768aba98bfb",
+        "type": "file",
+        "z": "c08cc006a3992541",
+        "name": "",
+        "filename": "/home/simonll4/raspberry/config/config.json",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "utf8",
+        "x": 690,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    }
+]
