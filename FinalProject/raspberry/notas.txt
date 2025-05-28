@@ -1,10 +1,24 @@
 https://github.com/MarcoAndreaBuchmann/bme280pi
 
+rele: https://www.instructables.com/5V-Relay-Raspberry-Pi/
 
 # RGB
-RED -> GPIO12
-GREEN -> GPIO13
-BLUE -> GPIO18
+    RED -> GPIO12
+    GREEN -> GPIO13
+    BLUE -> GPIO18
 
-LED -> GPIO26
+# LED    
+    + -> GPIO26
+
+# HC-SR04 (ultrasonico)
+    TRIG -> GPIO23
+    ECHO -> GPIO24
+
+# BME280  (temperatura)
+    SCL -> GPIO3
+    SDA -> GPIO2
+
+# RELES
+    1 -> GPIO21
+    2 -> GPIO20
 

@@ -1,0 +1,539 @@
+[
+    {
+        "id": "a1b2c3d4.56789",
+        "type": "tab",
+        "label": "Telegram Bot Handler",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "e55ef2b3ddcbd89c",
+        "type": "telegram sender",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "bot": "fbf630c04e6274c2",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 750,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0e280d744c5a321c",
+        "type": "link in",
+        "z": "a1b2c3d4.56789",
+        "name": "link in 1",
+        "links": [
+            "2c885bdccd1d375a",
+            "3882d91c3416bb13"
+        ],
+        "x": 575,
+        "y": 440,
+        "wires": [
+            [
+                "e55ef2b3ddcbd89c"
+            ]
+        ]
+    },
+    {
+        "id": "d6506d4c8c8909af",
+        "type": "telegram command",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "command": "/ayuda",
+        "description": "",
+        "registercommand": false,
+        "language": "",
+        "scope": "default",
+        "bot": "fbf630c04e6274c2",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 150,
+        "y": 60,
+        "wires": [
+            [
+                "a6b3b2d7e58ec91d"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "a6b3b2d7e58ec91d",
+        "type": "function",
+        "z": "a1b2c3d4.56789",
+        "name": "help message",
+        "func": "msg.payload={\n    content:\"Inicie la carga con /starttransfer \\nDetenga la carga con /stoptransfer \\nControle el servo enviando los grados con /moveservo grados \\nControle el led con /led on|off \\nControle el led RGB con /rgb R G B\",\n    chatId: msg.payload.chatId,\n    type: \"message\"\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 40,
+        "wires": [
+            [
+                "3882d91c3416bb13"
+            ]
+        ]
+    },
+    {
+        "id": "3882d91c3416bb13",
+        "type": "link out",
+        "z": "a1b2c3d4.56789",
+        "name": "help message",
+        "mode": "link",
+        "links": [
+            "0e280d744c5a321c"
+        ],
+        "x": 515,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "8ba5b3f718f5ea29",
+        "type": "telegram command",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "command": "/moveservo",
+        "description": "",
+        "registercommand": false,
+        "language": "",
+        "scope": "default",
+        "bot": "fbf630c04e6274c2",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 170,
+        "y": 140,
+        "wires": [
+            [
+                "e33779aa66fe9115"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "d8588d92959e1428",
+        "type": "telegram command",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "command": "/led",
+        "description": "",
+        "registercommand": false,
+        "language": "",
+        "scope": "default",
+        "bot": "fbf630c04e6274c2",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 190,
+        "y": 200,
+        "wires": [
+            [
+                "67aedd7a2f59f358"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "7502e9ab08c97e2d",
+        "type": "telegram command",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "command": "/rgb",
+        "description": "",
+        "registercommand": false,
+        "language": "",
+        "scope": "default",
+        "bot": "fbf630c04e6274c2",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 190,
+        "y": 260,
+        "wires": [
+            [
+                "8ece25d36ca0ebb7"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "ced61ed48fdc3c9e",
+        "type": "function",
+        "z": "a1b2c3d4.56789",
+        "name": "params",
+        "func": "if (!msg.payload || typeof msg.payload.content !== \"string\" || !msg.payload.command) {\n    node.error(\"Mensaje inválido. Falta contenido o comando.\", msg);\n    return null;\n}\n\nconst command = msg.payload.command.trim().toLowerCase();\nconst input = msg.payload.content.trim();\nconst parts = input.split(\" \");\n\nif (command === \"/moveservo\") {\n    const degrees = parseInt(input);\n    if (!isNaN(degrees)) {\n        if (degrees >= 0 && degrees <= 180) {\n            msg.payload = { degrees };\n            msg.payload.command = command;\n            return msg;\n        } else {\n            node.error(\"Grados fuera de rango: debe estar entre 0 y 180.\", msg);\n            return null;\n        }\n    } else {\n        node.error(\"Entrada inválida para /moveservo: se esperaba un número entre 0 y 180.\", msg);\n        return null;\n    }\n\n} else if (command === \"/led\") {\n    let action = input.toLowerCase();\n    if (action === \"on\" || action === \"off\") {\n        action = action == \"on\" ? 1 : 0;\n        msg.payload = { action };\n        msg.payload.command = command;\n        return msg;\n    } else {\n        node.error(\"Acción inválida para /led: se esperaba 'on' o 'off'.\", msg);\n        return null;\n    }\n\n} else if (command === \"/rgb\") {\n    if (parts.length !== 3) {\n        node.error(\"Formato inválido para /rgb. Se esperaba: 'R G B'\", msg);\n        return null;\n    }\n\n    const [R, G, B] = parts.map(Number);\n\n    if ([R, G, B].some(v => isNaN(v) || v < 0 || v > 255)) {\n        node.error(\"Valores RGB inválidos: deben ser números entre 0 y 255.\", msg);\n        return null;\n    }\n\n    msg.payload = {\n        rgb: `${R},${G},${B}`,\n        command: command\n    };\n    return msg;\n}\n\nelse {\n    node.error(`Comando desconocido: '${command}'`, msg);\n    return null;\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 200,
+        "wires": [
+            [
+                "bdd929b0e931ea5d"
+            ]
+        ]
+    },
+    {
+        "id": "3a10cfbdf7b1eb5e",
+        "type": "catch",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "scope": [
+            "ced61ed48fdc3c9e"
+        ],
+        "uncaught": false,
+        "x": 150,
+        "y": 440,
+        "wires": [
+            [
+                "e03d70152b1ca7bb"
+            ]
+        ]
+    },
+    {
+        "id": "e03d70152b1ca7bb",
+        "type": "function",
+        "z": "a1b2c3d4.56789",
+        "name": "error mesage",
+        "func": "msg.payload = {\n    content: msg.error.message,\n    chatId: flow.get(\"chatId\"),\n    type: \"message\"\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 440,
+        "wires": [
+            [
+                "2c885bdccd1d375a"
+            ]
+        ]
+    },
+    {
+        "id": "ba36205befc9b98c",
+        "type": "change",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "chatId",
+                "pt": "flow",
+                "to": "payload.chatId",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 580,
+        "y": 200,
+        "wires": [
+            [
+                "ced61ed48fdc3c9e"
+            ]
+        ]
+    },
+    {
+        "id": "2c885bdccd1d375a",
+        "type": "link out",
+        "z": "a1b2c3d4.56789",
+        "name": "error message",
+        "mode": "link",
+        "links": [
+            "0e280d744c5a321c"
+        ],
+        "x": 445,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "e33779aa66fe9115",
+        "type": "change",
+        "z": "a1b2c3d4.56789",
+        "name": "set command",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.command",
+                "pt": "msg",
+                "to": "/moveservo",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 380,
+        "y": 140,
+        "wires": [
+            [
+                "ba36205befc9b98c"
+            ]
+        ]
+    },
+    {
+        "id": "67aedd7a2f59f358",
+        "type": "change",
+        "z": "a1b2c3d4.56789",
+        "name": "set command",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.command",
+                "pt": "msg",
+                "to": "/led",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 380,
+        "y": 200,
+        "wires": [
+            [
+                "ba36205befc9b98c"
+            ]
+        ]
+    },
+    {
+        "id": "8ece25d36ca0ebb7",
+        "type": "change",
+        "z": "a1b2c3d4.56789",
+        "name": "set command",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.command",
+                "pt": "msg",
+                "to": "/rgb",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 380,
+        "y": 260,
+        "wires": [
+            [
+                "ba36205befc9b98c"
+            ]
+        ]
+    },
+    {
+        "id": "bdd929b0e931ea5d",
+        "type": "switch",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "property": "payload.command",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "/moveservo",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "/led",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "/rgb",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 910,
+        "y": 200,
+        "wires": [
+            [
+                "07d6cf5633042f00"
+            ],
+            [
+                "424b64c567722183"
+            ],
+            [
+                "ea2947ec11c3db34"
+            ]
+        ]
+    },
+    {
+        "id": "07d6cf5633042f00",
+        "type": "mqtt out",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "topic": "move-servo",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "f1g2h3i4.890c",
+        "x": 1090,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "424b64c567722183",
+        "type": "mqtt out",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "topic": "led",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "f1g2h3i4.890c",
+        "x": 1070,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "ea2947ec11c3db34",
+        "type": "mqtt out",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "topic": "rgb",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "f1g2h3i4.890c",
+        "x": 1070,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "c47ff8b71500e3dc",
+        "type": "mqtt in",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "topic": "alarms",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "f1g2h3i4.890c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 130,
+        "y": 380,
+        "wires": [
+            [
+                "e2856ee607b34e8f"
+            ]
+        ]
+    },
+    {
+        "id": "e2856ee607b34e8f",
+        "type": "debug",
+        "z": "a1b2c3d4.56789",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 410,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "fbf630c04e6274c2",
+        "type": "telegram bot",
+        "botname": "SOA-LPN",
+        "usernames": "",
+        "chatids": "",
+        "baseapiurl": "",
+        "testenvironment": false,
+        "updatemode": "polling",
+        "pollinterval": 300,
+        "usesocks": false,
+        "sockshost": "",
+        "socksprotocol": "socks5",
+        "socksport": 6667,
+        "socksusername": "anonymous",
+        "sockspassword": "",
+        "bothost": "",
+        "botpath": "",
+        "localbothost": "0.0.0.0",
+        "localbotport": 8443,
+        "publicbotport": 8443,
+        "privatekey": "",
+        "certificate": "",
+        "useselfsignedcertificate": false,
+        "sslterminated": false,
+        "verboselogging": false
+    },
+    {
+        "id": "f1g2h3i4.890c",
+        "type": "mqtt-broker",
+        "name": "Broker LPN2",
+        "broker": "192.168.192.162",
+        "port": "1883",
+        "tls": "",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]

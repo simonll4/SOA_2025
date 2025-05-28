@@ -1,0 +1,147 @@
+[
+  {
+    "id": "container_001",
+    "height": 22.0,
+    "sensor_height": 25.88,
+    "thresholds": {
+      "low_low": 0.15,
+      "low": 0.3,
+      "high": 0.75,
+      "high_high": 0.9
+    },
+    "calibration_table": [
+      {
+        "height": 0,
+        "volume": 0.0
+      },
+      {
+        "height": 0.36,
+        "volume": 0.216
+      },
+      {
+        "height": 1.22,
+        "volume": 0.432
+      },
+      {
+        "height": 1.79,
+        "volume": 0.594
+      },
+      {
+        "height": 1.97,
+        "volume": 0.81
+      },
+      {
+        "height": 2.63,
+        "volume": 1.026
+      },
+      {
+        "height": 3.27,
+        "volume": 1.242
+      },
+      {
+        "height": 3.77,
+        "volume": 1.458
+      },
+      {
+        "height": 4.78,
+        "volume": 1.674
+      },
+      {
+        "height": 5.32,
+        "volume": 1.89
+      },
+      {
+        "height": 5.5,
+        "volume": 2.106
+      },
+      {
+        "height": 6.57,
+        "volume": 2.43
+      },
+      {
+        "height": 6.94,
+        "volume": 3.078
+      },
+      {
+        "height": 7.76,
+        "volume": 3.402
+      },
+      {
+        "height": 8.5,
+        "volume": 3.726
+      },
+      {
+        "height": 9.37,
+        "volume": 4.104
+      },
+      {
+        "height": 10.81,
+        "volume": 4.482
+      },
+      {
+        "height": 11.67,
+        "volume": 4.86
+      },
+      {
+        "height": 12.6,
+        "volume": 5.238
+      },
+      {
+        "height": 13.01,
+        "volume": 5.616
+      },
+      {
+        "height": 14.33,
+        "volume": 6.048
+      },
+      {
+        "height": 15.22,
+        "volume": 6.48
+      },
+      {
+        "height": 15.64,
+        "volume": 6.912
+      },
+      {
+        "height": 16.91,
+        "volume": 7.344
+      },
+      {
+        "height": 17.56,
+        "volume": 7.668
+      },
+      {
+        "height": 18.4,
+        "volume": 8.1
+      },
+      {
+        "height": 19.24,
+        "volume": 8.532
+      },
+      {
+        "height": 19.42,
+        "volume": 8.856
+      },
+      {
+        "height": 20.41,
+        "volume": 9.18
+      },
+      {
+        "height": 20.55,
+        "volume": 9.504
+      },
+      {
+        "height": 21.14,
+        "volume": 9.828
+      },
+      {
+        "height": 22.33,
+        "volume": 10.26
+      },
+      {
+        "height": 22.69,
+        "volume": 10.476
+      }
+    ]
+  }
+]

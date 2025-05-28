@@ -1,0 +1,618 @@
+[
+    {
+        "id": "f8bcc2348cc2da98",
+        "type": "tab",
+        "label": "main-flow",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "01e15de8c789a156",
+        "type": "exec",
+        "z": "f8bcc2348cc2da98",
+        "command": "/home/simonll4/python/stop_sensor.sh",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "Terminar script del sensor",
+        "x": 450,
+        "y": 660,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "0d123e21a7578521",
+        "type": "inject",
+        "z": "f8bcc2348cc2da98",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 660,
+        "wires": [
+            [
+                "01e15de8c789a156"
+            ]
+        ]
+    },
+    {
+        "id": "0bd15aec9c835b4a",
+        "type": "function",
+        "z": "f8bcc2348cc2da98",
+        "name": "Validate config",
+        "func": "let config = global.get(\"config\");\nlet containers = msg.containers;\n\n// Convertir array en objeto con clave por ID\nlet containerMap = {};\nfor (let c of containers) {\n    containerMap[c.id] = c;\n}\n\n// Reemplazar containers en msg\nmsg.containers = containerMap;\n\n// Validaciones\nif (!config.id) {\n    node.error(\"Falta el campo 'id'\", msg);\n    return null;\n}\n\n// if (config.action !== 0 && config.action !== 1) {\n//     node.error(\"El campo 'action' debe ser 0 (vaciado) o 1 (llenado)\", msg);\n//     return null;\n// }\n\n// if (typeof config.preset !== \"number\" || config.preset <= 0) {\n//     node.error(\"El campo 'preset' debe ser un número positivo\", msg);\n//     return null;\n// }\n\nif (!msg.containers.hasOwnProperty(config.id)) {\n    node.error(`El ID '${config.id}' no existe en containers`, msg);\n    return null;\n}\n\n// Guardar contenedor coincidente en variable global\nglobal.set(\"container\", msg.containers[config.id]);\n\nmsg.validatedConfig = config;\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 100,
+        "wires": [
+            [
+                "0ad1c6c9a825db2a",
+                "6c16428ebec17b7b"
+            ]
+        ]
+    },
+    {
+        "id": "92e4a7fb71d263be",
+        "type": "file in",
+        "z": "f8bcc2348cc2da98",
+        "name": "",
+        "filename": "/home/simonll4/raspberry/data/containers.json",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "utf8",
+        "allProps": false,
+        "x": 400,
+        "y": 100,
+        "wires": [
+            [
+                "9a628ef2b00934e7"
+            ]
+        ]
+    },
+    {
+        "id": "9a628ef2b00934e7",
+        "type": "json",
+        "z": "f8bcc2348cc2da98",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 670,
+        "y": 100,
+        "wires": [
+            [
+                "9c4603653d676b20"
+            ]
+        ]
+    },
+    {
+        "id": "0ad1c6c9a825db2a",
+        "type": "link out",
+        "z": "f8bcc2348cc2da98",
+        "name": "Valid config",
+        "mode": "link",
+        "links": [
+            "8cfd423e38084cea"
+        ],
+        "x": 1175,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "9c4603653d676b20",
+        "type": "change",
+        "z": "f8bcc2348cc2da98",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "containers",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 850,
+        "y": 100,
+        "wires": [
+            [
+                "0bd15aec9c835b4a"
+            ]
+        ]
+    },
+    {
+        "id": "8cfd423e38084cea",
+        "type": "link in",
+        "z": "f8bcc2348cc2da98",
+        "name": "link in 1",
+        "links": [
+            "0ad1c6c9a825db2a"
+        ],
+        "x": 45,
+        "y": 260,
+        "wires": [
+            [
+                "2fabe9c6227edaff"
+            ]
+        ]
+    },
+    {
+        "id": "9ca5e92782927aa2",
+        "type": "e-mail",
+        "z": "f8bcc2348cc2da98",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": true,
+        "tls": true,
+        "name": "simon.llamosas44@gmail.com,matiicarrizo678@gmail.com",
+        "dname": "alarms-emails",
+        "x": 1000,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "4442a5b9684689c8",
+        "type": "function",
+        "z": "f8bcc2348cc2da98",
+        "name": "Calcular nivel, volumen, Q, ETA",
+        "func": "const container = global.get(\"container\");\nif (!container || !container.calibration_table || !container.height) {\n    node.error(\"Datos del recipiente incompletos o no definidos\");\n    return null;\n}\n\nconst tabla = container.calibration_table;\nconst volumenMax = tabla[tabla.length - 1].volume;\n\n// Leer o definir altura de referencia (sensor al fondo)\nlet alturaSensorFondo = container.sensor_height;\nconst distancia = msg.payload.distance_cm;\nconst T = msg.payload.temperature;\nconst ts = Date.now();\n\n// Calcular altura del líquido (nivel actual)\nconst nivel = alturaSensorFondo - distancia;\nconst nivelAjustado = Math.max(0, nivel);\n\n// Interpolación lineal para obtener volumen\nfunction interpolar(tabla, h) {\n    for (let i = 0; i < tabla.length - 1; i++) {\n        let a = tabla[i];\n        let b = tabla[i + 1];\n        if (h >= a.height && h <= b.height) {\n            let f = (h - a.height) / (b.height - a.height);\n            return a.volume + f * (b.volume - a.volume);\n        }\n    }\n    if (h <= tabla[0].height) return tabla[0].volume;\n    if (h >= tabla[tabla.length - 1].height)\n        return tabla[tabla.length - 1].volume;\n    return 0;\n}\n\n// Volumen corregido por temperatura\nconst beta = 0.000214;\nconst tRef = 20;\nconst V0 = interpolar(tabla, nivelAjustado);\nlet Vadj = V0 * (1 + beta * (T - tRef));\nVadj = Math.max(0, Math.min(Vadj, volumenMax));\n\n// Calcular caudal y ETA\nconst prev = context.get(\"prev\") || {};\nconst deltaT = (ts - (prev.ts || ts)) / 1000;\nconst deltaV = Vadj - (prev.V || Vadj);\nconst Q = deltaT > 0 ? deltaV / deltaT : 0;\n\nlet ETA = 0;\nif (Math.abs(Q) > 0.001) {\n    ETA = Q > 0 ? (volumenMax - Vadj) / Q : Vadj / Math.abs(Q);\n}\n\ncontext.set(\"prev\", { ts: ts, V: Vadj });\n\n// Salida final\nmsg.payload = {\n    id: container.id,\n    nivel_cm: nivelAjustado.toFixed(2),\n    temperatura_c: T,\n    volumen_L: Vadj.toFixed(2),\n    caudal_Lps: Q.toFixed(3),\n    ETA_segundos: ETA.toFixed(1),\n    timestamp: msg.payload.timestamp,\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 990,
+        "y": 240,
+        "wires": [
+            [
+                "438a869b8839a6a5",
+                "29b60d2186a5dcd3"
+            ]
+        ]
+    },
+    {
+        "id": "a2ca3aa4bf5af3f9",
+        "type": "exec",
+        "z": "f8bcc2348cc2da98",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "true",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "data_acquisition",
+        "x": 340,
+        "y": 260,
+        "wires": [
+            [
+                "73b4a99cdca6df2b"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "73b4a99cdca6df2b",
+        "type": "json",
+        "z": "f8bcc2348cc2da98",
+        "name": "Parsear JSON",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 560,
+        "y": 240,
+        "wires": [
+            [
+                "e4510b05f551120c"
+            ]
+        ]
+    },
+    {
+        "id": "438a869b8839a6a5",
+        "type": "debug",
+        "z": "f8bcc2348cc2da98",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1220,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "fe10fa0893c10a83",
+        "type": "inject",
+        "z": "f8bcc2348cc2da98",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 100,
+        "wires": [
+            [
+                "92e4a7fb71d263be"
+            ]
+        ]
+    },
+    {
+        "id": "e4510b05f551120c",
+        "type": "function",
+        "z": "f8bcc2348cc2da98",
+        "name": "smooth",
+        "func": "// Configuración del filtro\nconst HISTORICO_SIZE = 7;  // Tamaño del histórico para mediana\nconst ALPHA = 0.3;         // Factor de suavizado exponencial (0.1 a 0.5)\n\n// Inicialización\nconst historico = flow.get(\"historico_distancia\") || [];\nconst last_smoothed = flow.get(\"last_smoothed\") || null;\n\n// Validación básica (evita NaN o valores absurdos)\nif (typeof msg.payload.distance_cm !== \"number\" || msg.payload.distance_cm <= 0 || msg.payload.distance_cm > 500) {\n    node.warn(`Valor inválido descartado: ${msg.payload.distance_cm}`);\n    return null;  // Descarta el mensaje\n}\n\n// 1. Añadir al histórico y aplicar filtro de mediana\nhistorico.push(msg.payload.distance_cm);\nif (historico.length > HISTORICO_SIZE) historico.shift();\n\nconst mediana = [...historico].sort((a, b) => a - b)[Math.floor(historico.length / 2)];\n\n// 2. Suavizado exponencial\nconst smoothed = last_smoothed !== null\n    ? ALPHA * mediana + (1 - ALPHA) * last_smoothed\n    : mediana;\n\n// Guardar estado para próximo mensaje\nflow.set(\"historico_distancia\", historico);\nflow.set(\"last_smoothed\", smoothed);\n\n// Actualizar el mensaje con el valor filtrado\nmsg.payload.distance_cm = smoothed;\nmsg.payload.temperature = msg.payload.temperature;  // Mantener temperatura original\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 240,
+        "wires": [
+            [
+                "4442a5b9684689c8"
+            ]
+        ]
+    },
+    {
+        "id": "2fabe9c6227edaff",
+        "type": "function",
+        "z": "f8bcc2348cc2da98",
+        "name": "function 1",
+        "func": "let container = global.get(\"container\");\nlet height = container.sensor_height;\n\nmsg.payload = `/home/simonll4/python/.venv/bin/python /home/simonll4/python/main.py --height ${height}`;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 160,
+        "y": 260,
+        "wires": [
+            [
+                "a2ca3aa4bf5af3f9"
+            ]
+        ]
+    },
+    {
+        "id": "3968f56b9b101310",
+        "type": "link in",
+        "z": "f8bcc2348cc2da98",
+        "name": "link in 4",
+        "links": [
+            "38bf80c232b03b6f"
+        ],
+        "x": 165,
+        "y": 60,
+        "wires": [
+            [
+                "92e4a7fb71d263be"
+            ]
+        ]
+    },
+    {
+        "id": "f4b72a5603ef43f9",
+        "type": "mqtt out",
+        "z": "f8bcc2348cc2da98",
+        "name": "",
+        "topic": "influx/tank/measures",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "5adc8ec081586556",
+        "x": 200,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "6c16428ebec17b7b",
+        "type": "debug",
+        "z": "f8bcc2348cc2da98",
+        "name": "debug 7",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1260,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "ba7d46ce7f9580b3",
+        "type": "function",
+        "z": "f8bcc2348cc2da98",
+        "name": "thresholds_check_node",
+        "func": "// 1. Obtener configuración del contenedor\nconst container = global.get(\"container\");\nif (!container?.thresholds) {\n  node.error(\"No se encontraron umbrales en el container\");\n  return null;\n}\n\n// Obtener el id del contenedor\nlet id = container.id;\n\n// 2. Calcular umbrales absolutos (solo una vez)\nlet ctx = context.get(\"nivelContext\") || {};\nif (!ctx.umbrales) {\n  ctx.umbrales = {\n    bajo_bajo: container.height * container.thresholds.low_low,\n    bajo: container.height * container.thresholds.low,\n    alto: container.height * container.thresholds.high,\n    alto_alto: container.height * container.thresholds.high_high,\n  };\n  context.set(\"nivelContext\", ctx);\n}\n\n// 3. Obtener y validar medición actual\nlet nivel = msg.payload.nivel_cm; // Cambiado de distance_cm a nivel_cm según tu código\n\n// Asegurarnos que nivel es un número\nif (typeof nivel !== 'number') {\n  nivel = parseFloat(nivel);\n  if (isNaN(nivel)) {\n    node.error(\"El valor de nivel no es un número válido\", msg);\n    return null;\n  }\n}\n\n// Obtener temperatura actual\nlet temperatura = msg.payload.temperatura_c;\n\n// Asegurarnos que temperatura es un número\nif (typeof temperatura !== 'number') {\n  temperatura = parseFloat(temperatura);\n  if (isNaN(temperatura)) {\n    node.error(\"El valor de temperatura no es un número válido\", msg);\n    return null;\n  }\n}\n\nconst lastAlarm = ctx.lastAlarm || null;\n\n// 4. Determinar estado actual\nlet estadoActual = \"Normal\";\nif (nivel <= ctx.umbrales.bajo_bajo) estadoActual = \"Bajo-Bajo\";\nelse if (nivel <= ctx.umbrales.bajo) estadoActual = \"Bajo\";\nelse if (nivel >= ctx.umbrales.alto_alto) estadoActual = \"Alto-Alto\";\nelse if (nivel >= ctx.umbrales.alto) estadoActual = \"Alto\";\n\n// 5. Lógica de detección de cambios\nlet notificar = false;\nlet mensaje = \"\";\n\nif (estadoActual !== \"Normal\" && estadoActual !== lastAlarm) {\n  // Nueva alarma\n  notificar = true;\n  mensaje = `ALARMA ${estadoActual}: Nivel ${nivel.toFixed(2)} cm`;\n  ctx.lastAlarm = estadoActual;\n} else if (estadoActual === \"Normal\" && lastAlarm) {\n  // Recuperación\n  notificar = true;\n  mensaje = `ALARMA RESUELTA: ${lastAlarm} -> Normal (${nivel.toFixed(2)} cm)`;\n  ctx.lastAlarm = null;\n}\n\n// 6. Guardar contexto y preparar salida\ncontext.set(\"nivelContext\", ctx);\nmsg.payload = {\n  id: id,\n  nivel: nivel,\n  estado_actual: estadoActual,\n  estado_anterior: lastAlarm,\n  requiere_notificacion: notificar,\n  mensaje: mensaje,\n  umbrales: ctx.umbrales, // Para debug\n  temperatura: temperatura\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 210,
+        "y": 400,
+        "wires": [
+            [
+                "46991ee5dd19d7fd"
+            ]
+        ]
+    },
+    {
+        "id": "46991ee5dd19d7fd",
+        "type": "function",
+        "z": "f8bcc2348cc2da98",
+        "name": "notification_manager",
+        "func": "// Configuración de notificaciones (puede ir en context o flow)\nconst configNotificaciones = {\n    notificarBajo: true,\n    notificarBajoBajo: true,\n    notificarAlto: true,\n    notificarAltoAlto: true,\n    notificarRecuperacion: true\n};\n\n// Obtener datos del mensaje\nconst { estado_actual, estado_anterior, requiere_notificacion, mensaje, temperatura, id, nivel } = msg.payload;\n\n// Si no requiere notificación, termina el flujo (no envía nada)\nif (!requiere_notificacion) {\n    return null;\n}\n\n// Verificar si debemos notificar según configuración\nlet enviarEmail = false;\n\nswitch (estado_actual) {\n    case \"Bajo-Bajo\":\n        enviarEmail = configNotificaciones.notificarBajoBajo;\n        break;\n    case \"Bajo\":\n        enviarEmail = configNotificaciones.notificarBajo;\n        break;\n    case \"Alto\":\n        enviarEmail = configNotificaciones.notificarAlto;\n        break;\n    case \"Alto-Alto\":\n        enviarEmail = configNotificaciones.notificarAltoAlto;\n        break;\n    case \"Normal\":\n        enviarEmail = configNotificaciones.notificarRecuperacion;\n        break;\n}\n\n// Si hay que enviar email, preparar el mensaje\nif (enviarEmail) {\n    msg.payload = {\n        id: id,\n        estado_actual: estado_actual,\n        nivel: nivel,\n        asunto: `Alarma de Nivel: ${estado_actual}`,\n        cuerpo: mensaje,\n        prioridad: estado_actual.includes(\"-\") ? \"alta\" : \"media\",\n        temperatura: temperatura\n    };\n    return msg;\n}\n\n// Si no hay que enviar email, no retorna nada (flujo termina aquí)\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 400,
+        "wires": [
+            [
+                "d9d3efd5c2002a17",
+                "d9f9e6585b981604"
+            ]
+        ]
+    },
+    {
+        "id": "29b60d2186a5dcd3",
+        "type": "link out",
+        "z": "f8bcc2348cc2da98",
+        "name": "link out 1",
+        "mode": "link",
+        "links": [
+            "aacf1394b1db87f8"
+        ],
+        "x": 1175,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "aacf1394b1db87f8",
+        "type": "link in",
+        "z": "f8bcc2348cc2da98",
+        "name": "link in 5",
+        "links": [
+            "29b60d2186a5dcd3"
+        ],
+        "x": 45,
+        "y": 400,
+        "wires": [
+            [
+                "ba7d46ce7f9580b3",
+                "f4b72a5603ef43f9"
+            ]
+        ]
+    },
+    {
+        "id": "d9d3efd5c2002a17",
+        "type": "function",
+        "z": "f8bcc2348cc2da98",
+        "name": "mail_formatter",
+        "func": "// Entrada real del nodo de email\nlet asunto = msg.payload.asunto || \"\";\nlet cuerpo = msg.payload.cuerpo || \"\";\nlet prioridad = msg.payload.prioridad || \"media\"; // Podés ajustar esto desde lógica externa si querés\nlet temperatura = msg.payload.temperatura || \"Desconocida\";\nlet id = msg.payload.id || \"Desconocido\";\nlet nivel = msg.payload.nivel || \"Desconocido\";\n\n// Íconos y títulos por tipo\nlet tipo = prioridad === \"alta\" ? \"alta\" : prioridad === \"media\" ? \"media\" : \"baja\";\nlet icono = tipo === \"alta\" ? \"🔥\" : tipo === \"media\" ? \"⚠️\" : \"✅\";\nlet tituloTipo = tipo === \"alta\" ? \"ALARMA CRÍTICA\" : tipo === \"media\" ? \"ALERTA\" : \"NOTIFICACIÓN\";\nlet temperaturaIcono = temperatura > 30 ? \"🔥\" : temperatura > 20 ? \"⚠️\" : \"✅\";\nlet idIcono = id === \"Desconocido\" ? \"🔍\" : \"🔍\";\n\n\n// Fecha formateada\nlet fechaHora = new Date().toLocaleString('es-ES');\n\n// Detectar si es resolución\nlet esResuelta = /RESUELT[AO]/i.test(cuerpo);\n\n// Extraer título\nlet titulo = \"SIN TÍTULO\";\n\n// Tratar de extraer título desde el asunto\nlet matchTitulo = asunto.match(/: (.+?)( - |$)/);\nif (matchTitulo) {\n  titulo = matchTitulo[1].trim();\n}\n\n// Buscar nivel dentro del cuerpo\n/* let matchNivel = cuerpo.match(/Nivel\\s+([\\d.,]+)\\s?cm/i);\nif (matchNivel) {\n  nivel = `${matchNivel[1]} cm`;\n} else {\n  let nivelSolo = cuerpo.match(/^\\s*([\\d.]+)\\s*cm$/m);\n  if (nivelSolo) nivel = `${nivelSolo[1]} cm`;\n}\n */\n\n\n// Elegí color según el tipo\nlet colorPrincipal = tipo === \"alta\" ? \"#d9534f\" : tipo === \"media\" ? \"#f0ad4e\" : \"#5cb85c\";\n\n// Plantilla HTML\nlet html = `\n<html>\n  <body style=\"font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f9f9f9;\">\n    <div style=\"max-width: 600px; margin: auto; background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">\n      \n      <!-- Encabezado -->\n      <div style=\"background: ${colorPrincipal}; color: white; padding: 20px; text-align: center;\">\n        <img src=\"https://cdn-icons-png.flaticon.com/512/9170/9170553.png\" alt=\"Logo\" style=\"height: 50px; margin-bottom: 10px;\" />\n        <h1 style=\"margin: 0;\">${tituloTipo}: ${titulo.toUpperCase()}</h1>\n      </div>\n      \n      <!-- Contenido principal -->\n      <div style=\"padding: 20px; color: #333;\">\n        <p><strong>🪣 ID Contenedor:</strong> ${idIcono} ${id}</p>\n        <p><strong>📅 Fecha:</strong> ${fechaHora}</p>\n        <p><strong>📌 Estado:</strong> ${esResuelta ? '<span style=\"color: green;\">RESUELTO</span>' : '<span style=\"color: red;\">EN ALERTA</span>'}</p>\n        <p><strong>📏 Medición actual:</strong> ${nivel}</p>\n        <p><strong>🌡️ Temperatura actual:</strong> ${temperaturaIcono} ${temperatura}°C</p>\n\n        <p><strong>🛠 Acciones recomendadas:</strong></p>\n        <ul>\n          ${esResuelta\n    ? \"<li>Condición normal restablecida</li>\"\n    : tipo === \"alta\"\n      ? \"<li>Verificación inmediata requerida</li><li>Notificar al personal responsable</li>\"\n      : \"<li>Monitorear la evolución</li><li>Registrar en bitácora</li>\"\n  }\n        </ul>\n      </div>\n\n      <!-- Pie -->\n      <div style=\"background: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;\">\n        Sistema Automatizado de Monitoreo<br>\n        Arquitectura Orientada a Servicios - Proyecto Final\n      </div>\n    </div>\n  </body>\n</html>\n`;\n\n// Asignar al mensaje\nmsg.topic = `[MONITOR] ${tituloTipo}: ${titulo} - ${esResuelta ? \"RESUELTO\" : \"ALERTA\"}`;\nmsg.payload = html;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 400,
+        "wires": [
+            [
+                "9ca5e92782927aa2"
+            ]
+        ]
+    },
+    {
+        "id": "cb11702ac0d92712",
+        "type": "inject",
+        "z": "f8bcc2348cc2da98",
+        "name": "inject mail",
+        "props": [
+            {
+                "p": "payload.asunto",
+                "v": "⚠️ ALERTA: TANQUE PRINCIPAL ⚠️ ... 📏 Medición actual: 85.3 cm",
+                "vt": "str"
+            },
+            {
+                "p": "payload.cuerpo",
+                "v": "ALARMA Bajo: Nivel 85.3 cm",
+                "vt": "str"
+            },
+            {
+                "p": "payload.prioridad",
+                "v": "media",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 580,
+        "y": 340,
+        "wires": [
+            [
+                "d9d3efd5c2002a17"
+            ]
+        ]
+    },
+    {
+        "id": "d9f9e6585b981604",
+        "type": "function",
+        "z": "f8bcc2348cc2da98",
+        "name": "mqtt_formatter",
+        "func": "// Extraer datos del payload\nlet estado = msg.payload.estado_actual || \"\";\nlet nivel = msg.payload.nivel || \"Desconocido\";\nlet temperatura = msg.payload.temperatura || \"Desconocida\";\nlet id = msg.payload.id || \"Desconocido\";\n\n// Mapear estado a abreviatura\nlet estadoAbrev = \"\";\nswitch (estado) {\n    case \"Bajo-Bajo\":\n        estadoAbrev = \"BB\";\n        break;\n    case \"Bajo\":\n        estadoAbrev = \"B\";\n        break;\n    case \"Alto\":\n        estadoAbrev = \"A\";\n        break;\n    case \"Alto-Alto\":\n        estadoAbrev = \"AA\";\n        break;\n    default:\n        estadoAbrev = \"N\"; // N para Normal o desconocido\n}\n\n// Formatear mensaje MQTT como JSON\nlet mensaje = {\n    estado: estadoAbrev,\n    nivel: nivel,\n    temperatura: temperatura,\n    id: id\n};\n\nmsg.payload = JSON.stringify(mensaje);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 480,
+        "wires": [
+            [
+                "2a96f1248117e7f3"
+            ]
+        ]
+    },
+    {
+        "id": "2a96f1248117e7f3",
+        "type": "mqtt out",
+        "z": "f8bcc2348cc2da98",
+        "name": "",
+        "topic": "alarms",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "5adc8ec081586556",
+        "x": 970,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "73c21850a86b846b",
+        "type": "inject",
+        "z": "f8bcc2348cc2da98",
+        "name": "inject maqtt",
+        "props": [
+            {
+                "p": "payload.estado_actual",
+                "v": "Bajo",
+                "vt": "str"
+            },
+            {
+                "p": "payload.nivel",
+                "v": "24",
+                "vt": "str"
+            },
+            {
+                "p": "payload.temperatura",
+                "v": "25",
+                "vt": "str"
+            },
+            {
+                "p": "payload.id",
+                "v": "container_001",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 570,
+        "y": 520,
+        "wires": [
+            [
+                "d9f9e6585b981604"
+            ]
+        ]
+    },
+    {
+        "id": "5adc8ec081586556",
+        "type": "mqtt-broker",
+        "name": "BROKER LPN2",
+        "broker": "192.168.192.162",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]

@@ -1,0 +1,113 @@
+[
+    {
+        "id": "92178adcb3294a7f",
+        "type": "tab",
+        "label": "Send data to Influx",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "08a9e6d3f12ba5bf",
+        "type": "mqtt in",
+        "z": "92178adcb3294a7f",
+        "name": "",
+        "topic": "influx/tank/measures",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "f1g2h3i4.890c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 230,
+        "y": 160,
+        "wires": [
+            [
+                "7beb4612fcaffbe7"
+            ]
+        ]
+    },
+    {
+        "id": "7beb4612fcaffbe7",
+        "type": "function",
+        "z": "92178adcb3294a7f",
+        "name": "function 1",
+        "func": "try {\n    const originalTimestamp = msg.payload.timestamp;\n    \n    msg.payload = {\n        nivel_cm: Number(parseFloat(msg.payload.nivel_cm)) || 0,\n        temperatura_c: Number(parseFloat(msg.payload.temperatura_c)) || 0,\n        volumen_L: Number(parseFloat(msg.payload.volumen_L)) || 0,\n        caudal_Lps: Number(parseFloat(msg.payload.caudal_Lps)) || 0,\n        ETA_segundos: Number(parseFloat(msg.payload.ETA_segundos)) || 0,\n        timestamp_field: originalTimestamp \n    };\n    \n    msg.timestamp = new Date(originalTimestamp || Date.now());\n    \n    node.log(\"Payload: \" + JSON.stringify(msg.payload));\n    return msg;\n    \n} catch (error) {\n    node.error(\"Error: \" + error.message);\n    return null;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 160,
+        "wires": [
+            [
+                "8d2ece87ebd78d18"
+            ]
+        ]
+    },
+    {
+        "id": "8d2ece87ebd78d18",
+        "type": "influxdb out",
+        "z": "92178adcb3294a7f",
+        "influxdb": "35140bdb3779f5e7",
+        "name": "",
+        "measurement": "tank-measure",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "LPN",
+        "bucket": "tank-monitoring",
+        "x": 700,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "f1g2h3i4.890c",
+        "type": "mqtt-broker",
+        "name": "Broker LPN2",
+        "broker": "192.168.192.162",
+        "port": "1883",
+        "tls": "",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "35140bdb3779f5e7",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": 8086,
+        "protocol": "http",
+        "database": "database",
+        "name": "INFLUX-LPN1",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "https://lpn1.crabdance.com",
+        "timeout": 10,
+        "rejectUnauthorized": true
+    }
+]
