@@ -22,3 +22,10 @@ rele: https://www.instructables.com/5V-Relay-Raspberry-Pi/
     1 -> GPIO21
     2 -> GPIO20
 
+
+
+# keycloack + nginx + OAuth2 Proxy 
+    - MFA (multiples factores)
+
+    - https://medium.com/@lm.moreira/a-complete-microservice-edge-ecosystem-with-ngix-oauth2-proxy-keycloak-and-spring-boot-part-3-b28adcf9277f
+    - https://joeeey.com/blog/selfhosting-sso-with-nginx-oauth2-proxy-part-2/
