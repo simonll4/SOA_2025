@@ -1,12 +1,12 @@
 [
   {
     "id": "container_001",
-    "height": 22.0,
+    "height": 20,
     "sensor_height": 25.88,
     "thresholds": {
-      "low_low": 0.15,
+      "low_low": 0.1,
       "low": 0.3,
-      "high": 0.75,
+      "high": 0.8,
       "high_high": 0.9
     },
     "calibration_table": [
@@ -50,13 +50,19 @@
       { "height": 18.5, "volume": 8.316 },
       { "height": 19.0, "volume": 8.694 },
       { "height": 19.5, "volume": 9.018 },
-      { "height": 20.0, "volume": 9.342 },
-      { "height": 20.5, "volume": 9.504 },
-      { "height": 21.0, "volume": 9.828 },
-      { "height": 21.5, "volume": 10.044 },
-      { "height": 22.0, "volume": 10.152 },
-      { "height": 22.5, "volume": 10.368 },
-      { "height": 22.69, "volume": 10.476 }
+      { "height": 20.0, "volume": 9.342 }
     ]
+  },
+  {
+    "id": "container_002",
+    "height": 20,
+    "sensor_height": 25.88,
+    "thresholds": {
+      "low_low": 0.2,
+      "low": 0.3,
+      "high": 0.8,
+      "high_high": 0.9
+    },
+    "calibration_table": []
   }
 ]

@@ -1,16 +1,16 @@
 [
     {
-        "id": "073707ee0621e197",
+        "id": "f8bcc2348cc2da98",
         "type": "tab",
         "label": "main-flow",
-        "disabled": false,
+        "disabled": true,
         "info": "",
         "env": []
     },
     {
-        "id": "ff3b39e6e7c251bd",
+        "id": "0bd15aec9c835b4a",
         "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "Validate config",
         "func": "let config = global.get(\"config\");\nlet containers = msg.containers;\n\n// Convertir array en objeto con clave por ID\nlet containerMap = {};\nfor (let c of containers) {\n    containerMap[c.id] = c;\n}\n\n// Reemplazar containers en msg\nmsg.containers = containerMap;\n\n// Validaciones\nif (!config.id) {\n    node.error(\"Falta el campo 'id'\", msg);\n    return null;\n}\n\n// if (config.action !== 0 && config.action !== 1) {\n//     node.error(\"El campo 'action' debe ser 0 (vaciado) o 1 (llenado)\", msg);\n//     return null;\n// }\n\n// if (typeof config.preset !== \"number\" || config.preset <= 0) {\n//     node.error(\"El campo 'preset' debe ser un número positivo\", msg);\n//     return null;\n// }\n\nif (!msg.containers.hasOwnProperty(config.id)) {\n    node.error(`El ID '${config.id}' no existe en containers`, msg);\n    return null;\n}\n\n// Guardar contenedor coincidente en variable global\nglobal.set(\"container\", msg.containers[config.id]);\n\nmsg.validatedConfig = config;\n\nreturn msg;\n",
         "outputs": 1,
@@ -19,19 +19,19 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1040,
+        "x": 1060,
         "y": 100,
         "wires": [
             [
-                "5d19a6c7ecc2135b",
-                "95259b36a8b20314"
+                "0ad1c6c9a825db2a",
+                "6c16428ebec17b7b"
             ]
         ]
     },
     {
-        "id": "324a87607ab5b716",
+        "id": "92e4a7fb71d263be",
         "type": "file in",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "filename": "/home/simonll4/raspberry/data/containers.json",
         "filenameType": "str",
@@ -44,14 +44,14 @@
         "y": 100,
         "wires": [
             [
-                "826f0553bd4e3c3d"
+                "9a628ef2b00934e7"
             ]
         ]
     },
     {
-        "id": "826f0553bd4e3c3d",
+        "id": "9a628ef2b00934e7",
         "type": "json",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "property": "payload",
         "action": "",
@@ -60,27 +60,27 @@
         "y": 100,
         "wires": [
             [
-                "f333fab51ad99afc"
+                "9c4603653d676b20"
             ]
         ]
     },
     {
-        "id": "5d19a6c7ecc2135b",
+        "id": "0ad1c6c9a825db2a",
         "type": "link out",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "Valid config",
         "mode": "link",
         "links": [
-            "83bad9d35fb44bee"
+            "8cfd423e38084cea"
         ],
-        "x": 1175,
+        "x": 1195,
         "y": 100,
         "wires": []
     },
     {
-        "id": "f333fab51ad99afc",
+        "id": "9c4603653d676b20",
         "type": "change",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "rules": [
             {
@@ -100,30 +100,30 @@
         "y": 100,
         "wires": [
             [
-                "ff3b39e6e7c251bd"
+                "0bd15aec9c835b4a"
             ]
         ]
     },
     {
-        "id": "83bad9d35fb44bee",
+        "id": "8cfd423e38084cea",
         "type": "link in",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "link in 1",
         "links": [
-            "5d19a6c7ecc2135b"
+            "0ad1c6c9a825db2a"
         ],
         "x": 45,
         "y": 260,
         "wires": [
             [
-                "5ca7c9be6bfc3151"
+                "2fabe9c6227edaff"
             ]
         ]
     },
     {
-        "id": "c4528b2b6349d6a5",
+        "id": "9ca5e92782927aa2",
         "type": "e-mail",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "server": "smtp.gmail.com",
         "port": "465",
         "authtype": "BASIC",
@@ -138,11 +138,11 @@
         "wires": []
     },
     {
-        "id": "955cb8d1d603bd39",
+        "id": "4442a5b9684689c8",
         "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "metrics_calculation_node",
-        "func": "const container = global.get(\"container\");\nif (\n  !container ||\n  !container.calibration_table ||\n  !container.height ||\n  !container.thresholds\n) {\n  node.error(\"Datos del recipiente incompletos o no definidos\");\n  return null;\n}\n\n// 1. CONFIGURACIÓN AJUSTADA\nconst config = {\n  TOLERANCIA_NIVEL_CERO: 0.05,\n  TOLERANCIA_CAUDAL: 0.001, // más sensible\n\n  TOLERANCIA_UMBRAL: 0.01,\n\n  INTERVALO_MINIMO: 0.5,\n  RETRASO_ESTABILIZACION: 2,\n\n  HISTERESIS: 0.02,\n  MIN_MUESTRAS_OPERACION: 1,\n  TAMANO_HISTORIAL: 3,\n\n  FACTOR_SUAVIZADO_PRINCIPAL: 0.7,\n  FACTOR_SUAVIZADO_SECUNDARIO: 0.3,\n  FACTOR_SUAVIZADO_ETA: 0.4,\n  FACTOR_SUAVIZADO_NIVEL: 0.3,\n\n  MAX_ETA: 24 * 3600,\n  NIVEL_MAX_OVERSHOOT: 0.5,\n};\n\n// 2. DATOS BÁSICOS\nconst tabla = container.calibration_table;\nconst volumenMax = tabla[tabla.length - 1].volume;\nconst alturaMax = tabla[tabla.length - 1].height;\n\n// 3. UMBRALES\nfunction calcularUmbrales() {\n  const thresholds = container.thresholds;\n  const h_h_volumen = interpolar(tabla, thresholds.high_high * alturaMax);\n  const l_l_volumen = interpolar(tabla, thresholds.low_low * alturaMax);\n  const h_h_volumen_tol = h_h_volumen - volumenMax * config.TOLERANCIA_UMBRAL;\n  const l_l_volumen_tol = l_l_volumen + volumenMax * config.TOLERANCIA_UMBRAL;\n\n  return {\n    h_h: h_h_volumen,\n    l_l: l_l_volumen,\n    h_h_tol: h_h_volumen_tol,\n    l_l_tol: l_l_volumen_tol,\n    h_h_nivel: thresholds.high_high * alturaMax,\n    l_l_nivel: thresholds.low_low * alturaMax,\n  };\n}\n\nconst umbrales = calcularUmbrales();\n\n// 4. INTERPOLACIÓN\nfunction interpolar(tabla, h) {\n  if (h <= tabla[0].height) return tabla[0].volume;\n  if (h >= tabla[tabla.length - 1].height)\n    return tabla[tabla.length - 1].volume;\n\n  for (let i = 0; i < tabla.length - 1; i++) {\n    if (h >= tabla[i].height && h <= tabla[i + 1].height) {\n      const f = (h - tabla[i].height) / (tabla[i + 1].height - tabla[i].height);\n      return tabla[i].volume + f * (tabla[i + 1].volume - tabla[i].volume);\n    }\n  }\n  return volumenMax;\n}\n\n// 5. ESTADO ANTERIOR\nconst prev = context.get(\"prev\") || {\n  historialNivel: Array(config.TAMANO_HISTORIAL).fill(0),\n  historialQ: Array(config.TAMANO_HISTORIAL).fill(0),\n  ultimoEstable: { nivel: 0, volumen: 0, ts: 0 },\n};\n\n// 6. DATOS ACTUALES\nconst alturaSensorFondo = container.sensor_height;\nconst distancia = parseFloat(msg.payload.distance_cm);\nconst T = parseFloat(msg.payload.temperature);\nconst ts = Date.now();\n\n// Nivel ajustado\nconst nivelBruto = Math.max(0, alturaSensorFondo - distancia);\nconst nivelAjustado =\n  nivelBruto <= config.TOLERANCIA_NIVEL_CERO ? 0 : nivelBruto;\n\n// Suavizado del nivel\nprev.historialNivel.shift();\nprev.historialNivel.push(nivelAjustado);\nconst nivelFiltrado =\n  prev.historialNivel.reduce((s, v) => s + v, 0) / config.TAMANO_HISTORIAL;\n\n// 7. VOLUMEN AJUSTADO\nconst beta = 0.000214;\nconst tRef = 20;\nconst V0 = interpolar(tabla, nivelFiltrado);\nlet Vadj = V0 * (1 + beta * (T - tRef));\nVadj = Math.max(0, Math.min(Vadj, volumenMax));\nif (nivelAjustado === 0) Vadj = 0;\n\n// 8. CAUDAL\nconst deltaT = Math.max(0.1, (ts - (prev.ts || ts)) / 1000);\nconst deltaV = Vadj - (prev.V || Vadj);\nconst Qtemp = deltaV / deltaT;\n\n// node.warn(`ΔV=${deltaV.toFixed(5)}, ΔT=${deltaT.toFixed(3)}, Qtemp=${Qtemp.toFixed(5)}`);\n\nconst mediaMovil =\n  prev.historialQ.reduce((s, v) => s + v, 0) / config.TAMANO_HISTORIAL;\nconst Q =\n  config.FACTOR_SUAVIZADO_PRINCIPAL * Qtemp +\n  (1 - config.FACTOR_SUAVIZADO_PRINCIPAL) * mediaMovil;\n\nprev.historialQ.shift();\nprev.historialQ.push(Qtemp);\n\n// 9. ESTADO ACTUAL SIMPLIFICADO\nlet estado;\nif (Math.abs(Q) > config.TOLERANCIA_CAUDAL) {\n  estado = Q < 0 ? \"vaciado\" : \"llenado\";\n} else {\n  estado = \"reposo\";\n}\n\n// 10. ETA\nlet ETA = prev.ETA || 0;\nif (Math.abs(Q) > config.TOLERANCIA_CAUDAL && isFinite(Q)) {\n  if (estado === \"llenado\") {\n    const volumenObjetivo = Math.min(\n      umbrales.h_h,\n      volumenMax - config.NIVEL_MAX_OVERSHOOT\n    );\n    const rawETA = Vadj >= volumenObjetivo ? 0 : (volumenObjetivo - Vadj) / Q;\n    ETA =\n      config.FACTOR_SUAVIZADO_ETA * rawETA +\n      (1 - config.FACTOR_SUAVIZADO_ETA) * (prev.ETA || rawETA);\n  } else if (estado === \"vaciado\") {\n    const rawETA =\n      Vadj <= umbrales.l_l_tol ? 0 : (Vadj - umbrales.l_l) / Math.abs(Q);\n    ETA =\n      config.FACTOR_SUAVIZADO_ETA * rawETA +\n      (1 - config.FACTOR_SUAVIZADO_ETA) * (prev.ETA || rawETA);\n  }\n  ETA = Math.min(Math.max(0, ETA), config.MAX_ETA);\n} else {\n  ETA = prev.ETA ? prev.ETA * 0.9 : 0;\n}\n\n// 11. NIVEL ESTABLE\nif (Math.abs(Q) < config.TOLERANCIA_CAUDAL) {\n  if (!prev.tsEstable) prev.tsEstable = ts;\n  if (ts - prev.tsEstable >= config.RETRASO_ESTABILIZACION * 1000) {\n    prev.ultimoEstable = { nivel: nivelFiltrado, volumen: Vadj, ts: ts };\n  }\n} else {\n  prev.tsEstable = null;\n}\n\n// 12. ACTUALIZAR CONTEXTO\nprev.ts = ts;\nprev.V = Vadj;\nprev.nivelAjustado = nivelFiltrado;\nprev.estado = estado;\nprev.Q = estado !== \"reposo\" ? Q : 0;\nprev.ETA = ETA;\n\n// 13. FORMATOS\nfunction formatValue(value, decimals) {\n  if (value === undefined || value === null) return \"0.000\";\n  const lim = Math.pow(10, -decimals);\n  return value > -lim && value < lim ? \"0.000\" : value.toFixed(decimals);\n}\n\nfunction formatValueCaudal(value, decimals) {\n  if (value === undefined || value === null) return \"0.0000\";\n  return value.toFixed(decimals); // no fuerza a 0.0000 si es pequeño\n}\n\n// 14. SALIDA\nconst payload = {\n  id: container.id,\n  nivel_cm: formatValue(nivelFiltrado, 2),\n  temperatura_c: T.toFixed(1),\n  volumen_L: formatValue(Vadj, 3),\n  caudal_Lps: prev.estado !== \"reposo\" ? formatValueCaudal(prev.Q, 4) : \"0.0000\",\n  ETA_segundos:\n    prev.estado !== \"reposo\" ? Math.max(0, Math.round(prev.ETA)) : \"0\",\n  estado: prev.estado,\n  timestamp: msg.payload.timestamp || new Date(ts).toISOString(),\n};\n\ncontext.set(\"prev\", prev);\nmsg.payload = payload;\nreturn msg;\n",
+        "func": "const container = global.get(\"container\");\nif (!container || !container.calibration_table || !container.height) {\n  node.error(\"Datos del recipiente incompletos o no definidos\");\n  return null;\n}\n\nconst tabla = container.calibration_table;\nconst volumenMax = tabla[tabla.length - 1].volume;\nconst alturaMax = tabla[tabla.length - 1].height;\n\n// Configuración optimizada para suavizado\nconst TOLERANCIA_NIVEL_CERO = 0.1; // cm\nconst TOLERANCIA_NIVEL = 0.1; // cm\nconst TOLERANCIA_CAUDAL = 0.002; // L/s\nconst INTERVALO_MINIMO = 1; // segundos\nconst HISTERESIS = 0.05; // cm\nconst MIN_MUESTRAS_OPERACION = 5; // Más muestras para mayor estabilidad\nconst FACTOR_SUAVIZADO_PRINCIPAL = 0.4; // Suavizado principal\nconst FACTOR_SUAVIZADO_SECUNDARIO = 0.2; // Suavizado secundario\nconst TAMANO_HISTORIAL = 10; // Mayor historial para media móvil\nconst FACTOR_SUAVIZADO_ETA = 0.7; // Suavizado específico para ETA\n\nconst thresholds = container.thresholds;\n// Obtener los volúmenes correspondientes a los umbrales de altura\nconst h_h_volumen = interpolar(tabla, thresholds.high_high * alturaMax);\nconst l_l_volumen = interpolar(tabla, thresholds.low_low * alturaMax);\n\n// Leer datos del sensor\nlet alturaSensorFondo = container.sensor_height;\nconst distancia = parseFloat(msg.payload.distance_cm);\nconst T = parseFloat(msg.payload.temperature);\nconst ts = Date.now();\n\n// Calcular altura del líquido con filtro de cero\nconst nivel = alturaSensorFondo - distancia;\nlet nivelAjustado = Math.max(0, nivel);\n\n// Aplicar filtro de cero con histéresis\nconst prev = context.get(\"prev\") || {};\nif (nivelAjustado <= TOLERANCIA_NIVEL_CERO) {\n  if ((prev.nivelAjustado || 0) <= TOLERANCIA_NIVEL_CERO + HISTERESIS) {\n    nivelAjustado = 0;\n  }\n}\n\n// Interpolación lineal para volumen (función ya definida correctamente)\nfunction interpolar(tabla, h) {\n  for (let i = 0; i < tabla.length - 1; i++) {\n    let a = tabla[i];\n    let b = tabla[i + 1];\n    if (h >= a.height && h <= b.height) {\n      let f = (h - a.height) / (b.height - a.height);\n      return a.volume + f * (b.volume - a.volume);\n    }\n  }\n  return h <= tabla[0].height\n    ? tabla[0].volume\n    : tabla[tabla.length - 1].volume;\n}\n\n// Volumen corregido por temperatura\nconst beta = 0.000214;\nconst tRef = 20;\nconst V0 = interpolar(tabla, nivelAjustado);\nlet Vadj = V0 * (1 + beta * (T - tRef));\nVadj = Math.max(0, Math.min(Vadj, volumenMax));\n\nif (nivelAjustado === 0) Vadj = 0;\n\n// Calcular diferencias\nconst deltaT = (ts - (prev.ts || ts)) / 1000;\nconst deltaV = Vadj - (prev.V || Vadj);\n\n// Obtener estado anterior\nlet estado = prev.estado || \"reposo\";\nlet Q = prev.Q || 0;\nlet ETA = prev.ETA || 0;\nlet contadorOperacion = prev.contadorOperacion || 0;\nlet historialQ = prev.historialQ || Array(TAMANO_HISTORIAL).fill(0);\n\n// Solo procesar si ha pasado tiempo suficiente\nif (deltaT >= INTERVALO_MINIMO) {\n  // Calcular caudal temporal\n  const Qtemp = deltaT > 0 ? deltaV / deltaT : 0;\n\n  // Actualizar historial de caudales\n  historialQ.shift();\n  historialQ.push(Qtemp);\n\n  // 1. Calcular media móvil del historial\n  const mediaMovil =\n    historialQ.reduce((sum, val) => sum + val, 0) / historialQ.length;\n\n  // 2. Aplicar doble suavizado exponencial\n  const Qfiltrado1 =\n    FACTOR_SUAVIZADO_PRINCIPAL * Qtemp +\n    (1 - FACTOR_SUAVIZADO_PRINCIPAL) * (prev.Q || 0);\n  const Qfiltrado2 =\n    FACTOR_SUAVIZADO_SECUNDARIO * mediaMovil +\n    (1 - FACTOR_SUAVIZADO_SECUNDARIO) * Qfiltrado1;\n\n  // 3. Combinación ponderada de ambos métodos\n  const Qfiltrado = 0.7 * Qfiltrado2 + 0.3 * mediaMovil;\n\n  // Detección de operación con umbral más estable\n  const umbralOperacion = TOLERANCIA_CAUDAL * 1.5;\n  if (Math.abs(Qfiltrado) > umbralOperacion) {\n    contadorOperacion = Math.min(\n      contadorOperacion + 1,\n      MIN_MUESTRAS_OPERACION * 2\n    );\n  } else {\n    contadorOperacion = Math.max(contadorOperacion - 1, 0);\n  }\n\n  // Solo cambiar estado si tenemos suficiente confianza\n  if (contadorOperacion >= MIN_MUESTRAS_OPERACION) {\n    Q = Qfiltrado;\n    estado =\n      Q < -TOLERANCIA_CAUDAL\n        ? \"vaciado\"\n        : Q > TOLERANCIA_CAUDAL\n        ? \"llenado\"\n        : \"reposo\";\n\n    // Cálculo suavizado del ETA con los umbrales correctos\n    if (Math.abs(Q) > TOLERANCIA_CAUDAL * 2 && isFinite(Q)) {\n      if (estado === \"llenado\") {\n        if (Vadj >= h_h_volumen) {\n          ETA = 0; // Ya llegamos al umbral high_high\n        } else {\n          const rawETA = (h_h_volumen - Vadj) / Q;\n          ETA = prev.ETA\n            ? FACTOR_SUAVIZADO_ETA * rawETA +\n              (1 - FACTOR_SUAVIZADO_ETA) * prev.ETA\n            : rawETA;\n        }\n      } else if (estado === \"vaciado\") {\n        if (Vadj <= l_l_volumen) {\n          ETA = 0; // Ya llegamos al umbral low_low\n        } else {\n          const rawETA = (Vadj - l_l_volumen) / Math.abs(Q);\n          ETA = prev.ETA\n            ? FACTOR_SUAVIZADO_ETA * rawETA +\n              (1 - FACTOR_SUAVIZADO_ETA) * prev.ETA\n            : rawETA;\n        }\n      }\n    } else {\n      ETA = prev.ETA || 0; // Mantener último ETA válido\n    }\n  } else if (contadorOperacion === 0) {\n    estado = \"reposo\";\n    Q = 0;\n    // Reducir ETA gradualmente en lugar de resetearlo\n    ETA = prev.ETA ? prev.ETA * 0.9 : 0;\n  }\n}\n\n// Resto del código permanece igual...\n\n// Guardar estado para próxima iteración\ncontext.set(\"prev\", {\n  ts: ts,\n  V: Vadj,\n  nivelAjustado: nivelAjustado,\n  estado: estado,\n  Q: Q,\n  ETA: ETA,\n  contadorOperacion: contadorOperacion,\n  historialQ: historialQ,\n});\n\n// Función para formatear valores\nfunction formatValue(value, decimals) {\n  return Math.abs(value) < Math.pow(10, -decimals) ? 0 : value;\n}\n\n// Datos de depuración\nmsg.debug = {\n  deltaT: deltaT.toFixed(2),\n  deltaV: deltaV.toFixed(4),\n  Qtemp: (deltaT > 0 ? deltaV / deltaT : 0).toFixed(4),\n  volumen: Vadj.toFixed(4),\n  nivel: nivelAjustado.toFixed(2),\n  media_movil: (\n    historialQ.reduce((sum, val) => sum + val, 0) / historialQ.length\n  ).toFixed(4),\n  estado: estado,\n  contador: contadorOperacion,\n};\n\n// Salida final con mejor formato\nmsg.payload = {\n  id: container.id,\n  nivel_cm: formatValue(nivelAjustado, 1).toFixed(1),\n  temperatura_c: T.toFixed(1),\n  volumen_L: formatValue(Vadj, 1).toFixed(1),\n  caudal_Lps: estado !== \"reposo\" ? formatValue(Q, 3).toFixed(3) : \"0.000\",\n  ETA_segundos: estado !== \"reposo\" ? Math.max(0, Math.round(ETA)) : \"0\",\n  timestamp: msg.payload.timestamp || new Date(ts).toISOString(),\n};\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -153,15 +153,15 @@
         "y": 240,
         "wires": [
             [
-                "976a2793688ffa0e",
-                "06e848e9735cb305"
+                "438a869b8839a6a5",
+                "29b60d2186a5dcd3"
             ]
         ]
     },
     {
-        "id": "efbbeb51ea030351",
+        "id": "a2ca3aa4bf5af3f9",
         "type": "exec",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "command": "",
         "addpay": "payload",
         "append": "",
@@ -174,32 +174,32 @@
         "y": 260,
         "wires": [
             [
-                "a7bced206acf4071"
+                "73b4a99cdca6df2b"
             ],
             [],
             []
         ]
     },
     {
-        "id": "a7bced206acf4071",
+        "id": "73b4a99cdca6df2b",
         "type": "json",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "Parsear JSON",
         "property": "payload",
         "action": "",
         "pretty": false,
-        "x": 560,
+        "x": 580,
         "y": 240,
         "wires": [
             [
-                "587597851da5ce34"
+                "e4510b05f551120c"
             ]
         ]
     },
     {
-        "id": "976a2793688ffa0e",
+        "id": "438a869b8839a6a5",
         "type": "debug",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "debug 4",
         "active": true,
         "tosidebar": true,
@@ -213,9 +213,9 @@
         "wires": []
     },
     {
-        "id": "0b655a63e8dbddf3",
+        "id": "fe10fa0893c10a83",
         "type": "inject",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "props": [
             {
@@ -237,16 +237,16 @@
         "y": 100,
         "wires": [
             [
-                "324a87607ab5b716"
+                "92e4a7fb71d263be"
             ]
         ]
     },
     {
-        "id": "587597851da5ce34",
+        "id": "e4510b05f551120c",
         "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "smooth",
-        "func": "// Configuración del filtro\nconst HISTORICO_SIZE = 7;  // Tamaño del histórico para mediana\nconst ALPHA = 0.3;         // Factor de suavizado exponencial (0.1 a 0.5)\n\n// Inicialización\nconst historico = flow.get(\"historico_distancia\") || [];\nconst last_smoothed = flow.get(\"last_smoothed\") || null;\n\n// Validación básica (evita NaN o valores absurdos)\nif (typeof msg.payload.distance_cm !== \"number\" || msg.payload.distance_cm <= 0 || msg.payload.distance_cm > 500) {\n    node.warn(`Valor inválido descartado: ${msg.payload.distance_cm}`);\n    return null;  // Descarta el mensaje\n}\n\n// 1. Añadir al histórico y aplicar filtro de mediana\nhistorico.push(msg.payload.distance_cm);\nif (historico.length > HISTORICO_SIZE) historico.shift();\n\nconst mediana = [...historico].sort((a, b) => a - b)[Math.floor(historico.length / 2)];\n\n// 2. Suavizado exponencial\nconst smoothed = last_smoothed !== null\n    ? ALPHA * mediana + (1 - ALPHA) * last_smoothed\n    : mediana;\n\n// Guardar estado para próximo mensaje\nflow.set(\"historico_distancia\", historico);\nflow.set(\"last_smoothed\", smoothed);\n\n// Actualizar el mensaje con el valor filtrado\nmsg.payload.distance_cm = smoothed;\nmsg.payload.temperature = msg.payload.temperature;  // Mantener temperatura original\n\nreturn msg;",
+        "func": "// Configuración del filtro\nconst HISTORICO_SIZE = 7;  // Tamaño del histórico para mediana\nconst ALPHA = 0.3;         // Factor de suavizado exponencial (0.1 a 0.5)\n\n// Inicialización\nconst historico = flow.get(\"historico_distancia\") || [];\nconst last_smoothed = flow.get(\"last_smoothed\") || null;\n\n// Validación básica (evita NaN o valores absurdos)\nif (typeof msg.payload.distance_cm !== \"number\" || msg.payload.distance_cm <= 0 || msg.payload.distance_cm > 500) {\n    node.warn(`Valor inválido descartado: ${msg.payload.distance_cm}`);\n    return null;  // Descarta el mensaje\n}\n\n// 1. Añadir al histórico y aplicar filtro de mediana\nhistorico.push(msg.payload.distance_cm);\nif (historico.length > HISTORICO_SIZE) historico.shift();\n\nconst mediana = [...historico].sort((a, b) => a - b)[Math.floor(historico.length / 2)];\n\n// 2. Suavizado exponencial\nconst smoothed = last_smoothed !== null\n    ? ALPHA * mediana + (1 - ALPHA) * last_smoothed\n    : mediana;\n\n// Guardar estado para próximo mensaje\nflow.set(\"historico_distancia\", historico);\nflow.set(\"last_smoothed\", smoothed);\n\n// Actualizar el mensaje con el valor filtrado\nmsg.payload.distance_cm = smoothed.toFixed(1);\nmsg.payload.temperature = msg.payload.temperature;  // Mantener temperatura original\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -257,14 +257,15 @@
         "y": 240,
         "wires": [
             [
-                "955cb8d1d603bd39"
+                "4442a5b9684689c8",
+                "5330160ce694669f"
             ]
         ]
     },
     {
-        "id": "5ca7c9be6bfc3151",
+        "id": "2fabe9c6227edaff",
         "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "function 1",
         "func": "let container = global.get(\"container\");\nlet height = container.sensor_height;\n\nmsg.payload = `/home/simonll4/python/.venv/bin/python /home/simonll4/python/data_acquisition.py --height ${height}`;\nreturn msg;",
         "outputs": 1,
@@ -277,14 +278,14 @@
         "y": 260,
         "wires": [
             [
-                "efbbeb51ea030351"
+                "a2ca3aa4bf5af3f9"
             ]
         ]
     },
     {
-        "id": "fe72465d2d13eec0",
+        "id": "3968f56b9b101310",
         "type": "link in",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "link in 4",
         "links": [
             "38bf80c232b03b6f"
@@ -293,14 +294,14 @@
         "y": 60,
         "wires": [
             [
-                "324a87607ab5b716"
+                "92e4a7fb71d263be"
             ]
         ]
     },
     {
-        "id": "6656b9bfd0b57f11",
+        "id": "f4b72a5603ef43f9",
         "type": "mqtt out",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "topic": "influx/tank/measures",
         "qos": "0",
@@ -316,9 +317,9 @@
         "wires": []
     },
     {
-        "id": "95259b36a8b20314",
+        "id": "6c16428ebec17b7b",
         "type": "debug",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "debug 7",
         "active": false,
         "tosidebar": true,
@@ -327,34 +328,14 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1260,
+        "x": 1240,
         "y": 60,
         "wires": []
     },
     {
-        "id": "f346a41636bc9520",
+        "id": "46991ee5dd19d7fd",
         "type": "function",
-        "z": "073707ee0621e197",
-        "name": "thresholds_check_node",
-        "func": "// 1. Obtener configuración del contenedor\nconst container = global.get(\"container\");\nif (!container?.thresholds) {\n  node.error(\"No se encontraron umbrales en el container\");\n  return null;\n}\n\n// Obtener el id del contenedor\nlet id = container.id;\n\n// 2. Calcular umbrales absolutos (solo una vez)\nlet ctx = context.get(\"nivelContext\") || {};\nif (!ctx.umbrales) {\n  ctx.umbrales = {\n    bajo_bajo: container.height * container.thresholds.low_low,\n    bajo: container.height * container.thresholds.low,\n    alto: container.height * container.thresholds.high,\n    alto_alto: container.height * container.thresholds.high_high,\n  };\n}\n\n// 3. Obtener y validar medición actual\nlet nivel = msg.payload.nivel_cm;\n\nif (typeof nivel !== \"number\") {\n  nivel = parseFloat(nivel);\n  if (isNaN(nivel)) {\n    node.error(\"El valor de nivel no es un número válido\", msg);\n    return null;\n  }\n}\n\nconst lastAlarm = ctx.lastAlarm || null;\nconst um = ctx.umbrales;\n\n// Obtener temperatura actual\nlet temperatura = msg.payload.temperatura_c;\n\n// Asegurarnos que temperatura es un número\nif (typeof temperatura !== 'number') {\n  temperatura = parseFloat(temperatura);\n  if (isNaN(temperatura)) {\n    node.error(\"El valor de temperatura no es un número válido\", msg);\n    return null;\n  }\n}\n\n// 4. Determinar estado actual\nlet estadoActual = \"Normal\";\nif (nivel <= um.bajo_bajo) estadoActual = \"Bajo-Bajo\";\nelse if (nivel <= um.bajo) estadoActual = \"Bajo\";\nelse if (nivel >= um.alto_alto) estadoActual = \"Alto-Alto\";\nelse if (nivel >= um.alto) estadoActual = \"Alto\";\n\n// 5. Determinar dirección del cambio (carga o descarga)\nlet tendencia = null;\nif (ctx.ultimoNivel !== undefined) {\n  if (nivel > ctx.ultimoNivel) tendencia = \"carga\";\n  else if (nivel < ctx.ultimoNivel) tendencia = \"descarga\";\n}\n\n// 6. Lógica de notificación\nlet notificar = false;\nlet mensaje = \"\";\n\nif (estadoActual !== lastAlarm) {\n  // Cambió de estado\n  if (estadoActual === \"Normal\" && lastAlarm !== null) {\n    // Volvió a normal\n    notificar = true;\n    mensaje = `ALARMA RESUELTA: ${lastAlarm} -> Normal (${nivel.toFixed(\n      2\n    )} cm)`;\n    ctx.lastAlarm = null;\n  } else if (estadoActual !== \"Normal\") {\n    // Está en estado de alarma\n    if (lastAlarm === null) {\n      // Primera alarma\n      notificar = true;\n      mensaje = `ALARMA ${estadoActual}: Nivel ${nivel.toFixed(2)} cm`;\n      ctx.lastAlarm = estadoActual;\n    } else if (tendencia === \"descarga\") {\n      // En descarga, siempre reportar cambio a estado más crítico o menos crítico\n      notificar = true;\n      mensaje = `ALARMA ${estadoActual}: Nivel ${nivel.toFixed(2)} cm`;\n      ctx.lastAlarm = estadoActual;\n    } else if (tendencia === \"carga\") {\n      // En carga, solo reportar si se pasa a un estado más crítico (de B a BB por ejemplo)\n      const niveles = [\"Normal\", \"Bajo\", \"Bajo-Bajo\", \"Alto\", \"Alto-Alto\"];\n      const severidad = (e) => niveles.indexOf(e);\n      if (severidad(estadoActual) > severidad(lastAlarm)) {\n        notificar = true;\n        mensaje = `ALARMA ${estadoActual}: Nivel ${nivel.toFixed(2)} cm`;\n        ctx.lastAlarm = estadoActual;\n      } // Si baja severidad en carga, no notificar\n    }\n  }\n}\n\n// 7. Guardar contexto y preparar salida\nctx.ultimoNivel = nivel;\ncontext.set(\"nivelContext\", ctx);\n\nflow.set(\"alarma_actual\",estadoActual)\n\nmsg.payload = {\n  id: id,\n  nivel: nivel,\n  estado_actual: estadoActual,\n  estado_anterior: lastAlarm,\n  requiere_notificacion: notificar,\n  mensaje: mensaje,\n  umbrales: um, // Para depuración\n  tendencia: tendencia || \"sin cambios\",\n  temperatura: temperatura,\n};\n\nreturn msg;\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 250,
-        "y": 400,
-        "wires": [
-            [
-                "61f14eac850246cf"
-            ]
-        ]
-    },
-    {
-        "id": "a6d507cf942b204f",
-        "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "notification_manager",
         "func": "// Configuración de notificaciones (puede ir en context o flow)\nconst configNotificaciones = {\n    notificarBajo: true,\n    notificarBajoBajo: true,\n    notificarAlto: true,\n    notificarAltoAlto: true,\n    notificarRecuperacion: true\n};\n\n// Obtener datos del mensaje\nconst { estado_actual, estado_anterior, requiere_notificacion, mensaje, temperatura, id, nivel } = msg.payload;\n\n// Si no requiere notificación, termina el flujo (no envía nada)\nif (!requiere_notificacion) {\n    return null;\n}\n\n// Verificar si debemos notificar según configuración\nlet enviarEmail = false;\n\nswitch (estado_actual) {\n    case \"Bajo-Bajo\":\n        enviarEmail = configNotificaciones.notificarBajoBajo;\n        break;\n    case \"Bajo\":\n        enviarEmail = configNotificaciones.notificarBajo;\n        break;\n    case \"Alto\":\n        enviarEmail = configNotificaciones.notificarAlto;\n        break;\n    case \"Alto-Alto\":\n        enviarEmail = configNotificaciones.notificarAltoAlto;\n        break;\n    case \"Normal\":\n        enviarEmail = configNotificaciones.notificarRecuperacion;\n        break;\n}\n\n// Si hay que enviar email, preparar el mensaje\nif (enviarEmail) {\n    msg.payload = {\n        id: id,\n        estado_actual: estado_actual,\n        nivel: nivel,\n        asunto: `Alarma de Nivel: ${estado_actual}`,\n        cuerpo: mensaje,\n        prioridad: estado_actual.includes(\"-\") ? \"alta\" : \"media\",\n        temperatura: temperatura\n    };\n    return msg;\n}\n\n// Si no hay que enviar email, no retorna nada (flujo termina aquí)\nreturn null;",
         "outputs": 1,
@@ -363,49 +344,49 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 540,
+        "x": 500,
         "y": 400,
         "wires": [
             [
-                "a0b9877fcf9f173d",
-                "eaee46c668bb972f"
+                "d9d3efd5c2002a17",
+                "d9f9e6585b981604"
             ]
         ]
     },
     {
-        "id": "06e848e9735cb305",
+        "id": "29b60d2186a5dcd3",
         "type": "link out",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "link out 1",
         "mode": "link",
         "links": [
-            "625161d8e885cd89"
+            "aacf1394b1db87f8"
         ],
         "x": 1175,
         "y": 240,
         "wires": []
     },
     {
-        "id": "625161d8e885cd89",
+        "id": "aacf1394b1db87f8",
         "type": "link in",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "link in 5",
         "links": [
-            "06e848e9735cb305"
+            "29b60d2186a5dcd3"
         ],
         "x": 45,
         "y": 400,
         "wires": [
             [
-                "6656b9bfd0b57f11",
-                "f346a41636bc9520"
+                "f4b72a5603ef43f9",
+                "ba7d46ce7f9580b3"
             ]
         ]
     },
     {
-        "id": "a0b9877fcf9f173d",
+        "id": "d9d3efd5c2002a17",
         "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "mail_formatter",
         "func": "// Entrada real del nodo de email\nlet asunto = msg.payload.asunto || \"\";\nlet cuerpo = msg.payload.cuerpo || \"\";\nlet prioridad = msg.payload.prioridad || \"media\"; // Podés ajustar esto desde lógica externa si querés\nlet temperatura = msg.payload.temperatura || \"Desconocida\";\nlet id = msg.payload.id || \"Desconocido\";\nlet nivel = msg.payload.nivel || \"Desconocido\";\n\n// Íconos y títulos por tipo\nlet tipo = prioridad === \"alta\" ? \"alta\" : prioridad === \"media\" ? \"media\" : \"baja\";\nlet icono = tipo === \"alta\" ? \"🔥\" : tipo === \"media\" ? \"⚠️\" : \"✅\";\nlet tituloTipo = tipo === \"alta\" ? \"ALARMA CRÍTICA\" : tipo === \"media\" ? \"ALERTA\" : \"NOTIFICACIÓN\";\nlet temperaturaIcono = temperatura > 30 ? \"🔥\" : temperatura > 20 ? \"⚠️\" : \"✅\";\nlet idIcono = id === \"Desconocido\" ? \"🔍\" : \"🔍\";\n\n\n// Fecha formateada\nlet fechaHora = new Date().toLocaleString('es-ES');\n\n// Detectar si es resolución\nlet esResuelta = /RESUELT[AO]/i.test(cuerpo);\n\n// Extraer título\nlet titulo = \"SIN TÍTULO\";\n\n// Tratar de extraer título desde el asunto\nlet matchTitulo = asunto.match(/: (.+?)( - |$)/);\nif (matchTitulo) {\n  titulo = matchTitulo[1].trim();\n}\n\n// Buscar nivel dentro del cuerpo\n/* let matchNivel = cuerpo.match(/Nivel\\s+([\\d.,]+)\\s?cm/i);\nif (matchNivel) {\n  nivel = `${matchNivel[1]} cm`;\n} else {\n  let nivelSolo = cuerpo.match(/^\\s*([\\d.]+)\\s*cm$/m);\n  if (nivelSolo) nivel = `${nivelSolo[1]} cm`;\n}\n */\n\n\n// Elegí color según el tipo\nlet colorPrincipal = tipo === \"alta\" ? \"#d9534f\" : tipo === \"media\" ? \"#f0ad4e\" : \"#5cb85c\";\n\n// Plantilla HTML\nlet html = `\n<html>\n  <body style=\"font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f9f9f9;\">\n    <div style=\"max-width: 600px; margin: auto; background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">\n      \n      <!-- Encabezado -->\n      <div style=\"background: ${colorPrincipal}; color: white; padding: 20px; text-align: center;\">\n        <img src=\"https://cdn-icons-png.flaticon.com/512/9170/9170553.png\" alt=\"Logo\" style=\"height: 100px; margin-bottom: 10px;\" />\n        <h1 style=\"margin: 0;\">${tituloTipo}: ${titulo.toUpperCase()}</h1>\n      </div>\n      \n      <!-- Contenido principal -->\n      <div style=\"padding: 20px; color: #333;\">\n        <p><strong>🪣 ID Contenedor:</strong> ${idIcono} ${id}</p>\n        <p><strong>📅 Fecha:</strong> ${fechaHora}</p>\n        <p><strong>📌 Estado:</strong> ${esResuelta ? '<span style=\"color: green;\">RESUELTO</span>' : '<span style=\"color: red;\">EN ALERTA</span>'}</p>\n        <p><strong>📏 Medición actual:</strong> ${nivel}</p>\n        <p><strong>🌡️ Temperatura actual:</strong> ${temperaturaIcono} ${temperatura}°C</p>\n\n        <p><strong>🛠 Acciones recomendadas:</strong></p>\n        <ul>\n          ${esResuelta\n    ? \"<li>Condición normal restablecida</li>\"\n    : tipo === \"alta\"\n      ? \"<li>Verificación inmediata requerida</li><li>Notificar al personal responsable</li>\"\n      : \"<li>Monitorear la evolución</li><li>Registrar en bitácora</li>\"\n  }\n        </ul>\n      </div>\n\n      <!-- Pie -->\n      <div style=\"background: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;\">\n        Sistema Automatizado de Monitoreo<br>\n        Arquitectura Orientada a Servicios - Proyecto Final\n      </div>\n    </div>\n  </body>\n</html>\n`;\n\n// Asignar al mensaje\nmsg.topic = `[MONITOR] ${tituloTipo}: ${titulo} - ${esResuelta ? \"RESUELTO\" : \"ALERTA\"}`;\nmsg.payload = html;\n\nreturn msg;",
         "outputs": 1,
@@ -418,14 +399,14 @@
         "y": 400,
         "wires": [
             [
-                "c4528b2b6349d6a5"
+                "9ca5e92782927aa2"
             ]
         ]
     },
     {
-        "id": "a7336d0e17069d74",
+        "id": "cb11702ac0d92712",
         "type": "inject",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "inject mail",
         "props": [
             {
@@ -450,17 +431,17 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 760,
-        "y": 340,
+        "y": 360,
         "wires": [
             [
-                "a0b9877fcf9f173d"
+                "d9d3efd5c2002a17"
             ]
         ]
     },
     {
-        "id": "eaee46c668bb972f",
+        "id": "d9f9e6585b981604",
         "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "mqtt_formatter",
         "func": "// Extraer datos del payload\nlet estado = msg.payload.estado_actual || \"\";\nlet nivel = msg.payload.nivel || \"Desconocido\";\nlet temperatura = msg.payload.temperatura || \"Desconocida\";\nlet id = msg.payload.id || \"Desconocido\";\n\n// Mapear estado a abreviatura\nlet estadoAbrev = \"\";\nswitch (estado) {\n    case \"Bajo-Bajo\":\n        estadoAbrev = \"BB\";\n        break;\n    case \"Bajo\":\n        estadoAbrev = \"B\";\n        break;\n    case \"Alto\":\n        estadoAbrev = \"A\";\n        break;\n    case \"Alto-Alto\":\n        estadoAbrev = \"AA\";\n        break;\n    default:\n        estadoAbrev = \"N\"; // N para Normal o desconocido\n}\n\n// Formatear mensaje MQTT como JSON\nlet mensaje = {\n    estado: estadoAbrev,\n    nivel: nivel,\n    temperatura: temperatura,\n    id: id\n};\n\nmsg.payload = JSON.stringify(mensaje);\n\nreturn msg;",
         "outputs": 1,
@@ -473,14 +454,14 @@
         "y": 480,
         "wires": [
             [
-                "f397689f47bac5d7"
+                "2a96f1248117e7f3"
             ]
         ]
     },
     {
-        "id": "f397689f47bac5d7",
+        "id": "2a96f1248117e7f3",
         "type": "mqtt out",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "topic": "alarms",
         "qos": "2",
@@ -491,14 +472,14 @@
         "correl": "",
         "expiry": "",
         "broker": "5adc8ec081586556",
-        "x": 1090,
+        "x": 1110,
         "y": 480,
         "wires": []
     },
     {
-        "id": "576fb1b143f2ec97",
+        "id": "73c21850a86b846b",
         "type": "inject",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "inject maqtt",
         "props": [
             {
@@ -528,17 +509,17 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 750,
-        "y": 500,
+        "y": 520,
         "wires": [
             [
-                "eaee46c668bb972f"
+                "d9f9e6585b981604"
             ]
         ]
     },
     {
-        "id": "408e94da4d0f4f1a",
+        "id": "1325ca38334cb637",
         "type": "exec",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "command": "python3 /home/simonll4/python/relay_channel_20.py",
         "addpay": "",
         "append": "",
@@ -556,9 +537,9 @@
         ]
     },
     {
-        "id": "12349a1ad2fc2e02",
+        "id": "c0a942da02cce0c0",
         "type": "inject",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "props": [
             {
@@ -580,14 +561,14 @@
         "y": 820,
         "wires": [
             [
-                "95cc2c0bb602acf3"
+                "54b1ee770c722be6"
             ]
         ]
     },
     {
-        "id": "b23de293eb101425",
+        "id": "f28e3bc342b5446a",
         "type": "exec",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "command": "kill -TERM $(cat /tmp/relay_channel_20.pid)",
         "addpay": "",
         "append": "",
@@ -596,8 +577,8 @@
         "winHide": false,
         "oldrc": false,
         "name": "Stop Fill Pump ",
-        "x": 840,
-        "y": 600,
+        "x": 920,
+        "y": 640,
         "wires": [
             [],
             [],
@@ -605,9 +586,9 @@
         ]
     },
     {
-        "id": "a6fd0092ef3f1364",
+        "id": "f59d36d0daec3faa",
         "type": "inject",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "props": [
             {
@@ -629,14 +610,14 @@
         "y": 600,
         "wires": [
             [
-                "b23de293eb101425"
+                "f28e3bc342b5446a"
             ]
         ]
     },
     {
-        "id": "61f14eac850246cf",
+        "id": "ad4c77dbc1291da5",
         "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "Critical Alarm Gate",
         "func": "const estado = msg.payload?.estado_actual;\nconst notificar = msg.payload?.requiere_notificacion;\n\n// Verificamos si es una alarma crítica y requiere notificación\nif ((estado === \"Alto-Alto\" || estado === \"Bajo-Bajo\") && notificar === true) {\n    msg.payload = {\n        alarma_critica: true,\n        estado: estado,\n        nivel: msg.payload.nivel,\n        mensaje: msg.payload.mensaje\n    };\n    return msg; // Enviar señal al siguiente nodo\n}\n\n// No cumple condiciones: no hacer nada\nreturn null;\n",
         "outputs": 1,
@@ -649,15 +630,15 @@
         "y": 540,
         "wires": [
             [
-                "b23de293eb101425",
-                "9cfd4736f4ecc2d5"
+                "f28e3bc342b5446a",
+                "464877eb7d4f4957"
             ]
         ]
     },
     {
-        "id": "a2fa9d15b61bdde3",
+        "id": "61f276fb98184f6c",
         "type": "exec",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "command": "python3 /home/simonll4/python/relay_channel_21.py",
         "addpay": "",
         "append": "",
@@ -666,7 +647,7 @@
         "winHide": false,
         "oldrc": false,
         "name": "Start Drain",
-        "x": 890,
+        "x": 910,
         "y": 1020,
         "wires": [
             [],
@@ -675,9 +656,9 @@
         ]
     },
     {
-        "id": "95cc2c0bb602acf3",
+        "id": "54b1ee770c722be6",
         "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "ignore_high_high_alarm",
         "func": "\nconst estado = flow.get(\"alarma_actual\")\n\n// Si es AA (Alto-Alto), no enviar pulso\nif (estado === \"Alto-Alto\") {\n    return null;\n}\nreturn msg;\n\n",
         "outputs": 1,
@@ -690,14 +671,14 @@
         "y": 880,
         "wires": [
             [
-                "408e94da4d0f4f1a"
+                "1325ca38334cb637"
             ]
         ]
     },
     {
-        "id": "698c3daebf59a963",
+        "id": "8709687f1f3787d2",
         "type": "function",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "ignore_low_low_alarm",
         "func": "const estado = flow.get(\"alarma_actual\")\n\nif (estado === \"Bajo-Bajo\") {\n    return null;\n}\nreturn msg;\n\n",
         "outputs": 1,
@@ -710,14 +691,14 @@
         "y": 1020,
         "wires": [
             [
-                "a2fa9d15b61bdde3"
+                "61f276fb98184f6c"
             ]
         ]
     },
     {
-        "id": "e4dc2f5616fdebc2",
+        "id": "f56d7206911acf1e",
         "type": "inject",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "props": [
             {
@@ -739,14 +720,14 @@
         "y": 960,
         "wires": [
             [
-                "698c3daebf59a963"
+                "8709687f1f3787d2"
             ]
         ]
     },
     {
-        "id": "bccd7c2a893ca11e",
+        "id": "495b6f31369a9d81",
         "type": "mqtt in",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "topic": "/startf",
         "qos": "2",
@@ -760,14 +741,14 @@
         "y": 880,
         "wires": [
             [
-                "95cc2c0bb602acf3"
+                "54b1ee770c722be6"
             ]
         ]
     },
     {
-        "id": "d433c3aac674352b",
+        "id": "82ac2f0d617f7cd7",
         "type": "mqtt in",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "topic": "/startd",
         "qos": "2",
@@ -781,14 +762,14 @@
         "y": 1020,
         "wires": [
             [
-                "698c3daebf59a963"
+                "8709687f1f3787d2"
             ]
         ]
     },
     {
-        "id": "13253dd2a9c2220d",
+        "id": "bae84f7ea46d6412",
         "type": "mqtt in",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "topic": "/stopfp",
         "qos": "2",
@@ -802,14 +783,14 @@
         "y": 640,
         "wires": [
             [
-                "b23de293eb101425"
+                "f28e3bc342b5446a"
             ]
         ]
     },
     {
-        "id": "0e1c710547d7fc8c",
+        "id": "0a8502a63fd5529f",
         "type": "mqtt in",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "topic": "/stopdp",
         "qos": "2",
@@ -823,14 +804,14 @@
         "y": 740,
         "wires": [
             [
-                "9cfd4736f4ecc2d5"
+                "464877eb7d4f4957"
             ]
         ]
     },
     {
-        "id": "9cfd4736f4ecc2d5",
+        "id": "464877eb7d4f4957",
         "type": "exec",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "command": "kill -TERM $(cat /tmp/relay_channel_21.pid)",
         "addpay": "",
         "append": "",
@@ -839,7 +820,7 @@
         "winHide": false,
         "oldrc": false,
         "name": "Stop Drain Pump",
-        "x": 850,
+        "x": 930,
         "y": 740,
         "wires": [
             [],
@@ -848,9 +829,9 @@
         ]
     },
     {
-        "id": "83f792e7b8bf2e64",
+        "id": "115a95fef9a87c60",
         "type": "inject",
-        "z": "073707ee0621e197",
+        "z": "f8bcc2348cc2da98",
         "name": "",
         "props": [
             {
@@ -872,9 +853,46 @@
         "y": 700,
         "wires": [
             [
-                "9cfd4736f4ecc2d5"
+                "464877eb7d4f4957"
             ]
         ]
+    },
+    {
+        "id": "ba7d46ce7f9580b3",
+        "type": "function",
+        "z": "f8bcc2348cc2da98",
+        "name": "thresholds_check_node",
+        "func": "// 1. Obtener configuración del contenedor\nconst container = global.get(\"container\");\nif (!container?.thresholds) {\n  node.error(\"No se encontraron umbrales en el container\");\n  return null;\n}\n\n// Obtener el id del contenedor\nlet id = container.id;\n\n// 2. Calcular umbrales absolutos (solo una vez)\nlet ctx = flow.get(\"nivelContex\") || {};\nif (!ctx.umbrales) {\n  ctx.umbrales = {\n    bajo_bajo: container.height * container.thresholds.low_low,\n    bajo: container.height * container.thresholds.low,\n    alto: container.height * container.thresholds.high,\n    alto_alto: container.height * container.thresholds.high_high,\n  };\n}\n\n// 3. Obtener y validar medición actual\nlet nivel = msg.payload.nivel_cm;\n\nif (typeof nivel !== \"number\") {\n  nivel = parseFloat(nivel);\n  if (isNaN(nivel)) {\n    node.error(\"El valor de nivel no es un número válido\", msg);\n    return null;\n  }\n}\n\nconst lastAlarm = ctx.lastAlarm || null;\nconst um = ctx.umbrales;\n\n// Obtener temperatura actual\nlet temperatura = msg.payload.temperatura_c;\n\n// Asegurarnos que temperatura es un número\nif (typeof temperatura !== 'number') {\n  temperatura = parseFloat(temperatura);\n  if (isNaN(temperatura)) {\n    node.error(\"El valor de temperatura no es un número válido\", msg);\n    return null;\n  }\n}\n\n// 4. Determinar estado actual\nlet estadoActual = \"Normal\";\nif (nivel <= um.bajo_bajo) estadoActual = \"Bajo-Bajo\";\nelse if (nivel <= um.bajo) estadoActual = \"Bajo\";\nelse if (nivel >= um.alto_alto) estadoActual = \"Alto-Alto\";\nelse if (nivel >= um.alto) estadoActual = \"Alto\";\n\n// 5. Determinar dirección del cambio (carga o descarga)\nlet tendencia = null;\nif (ctx.ultimoNivel !== undefined) {\n  if (nivel > ctx.ultimoNivel) tendencia = \"carga\";\n  else if (nivel < ctx.ultimoNivel) tendencia = \"descarga\";\n}\n\n// 6. Lógica de notificación\nlet notificar = false;\nlet mensaje = \"\";\n\nif (estadoActual !== lastAlarm) {\n  // Cambió de estado\n  if (estadoActual === \"Normal\" && lastAlarm !== null) {\n    // Volvió a normal\n    notificar = true;\n    mensaje = `ALARMA RESUELTA: ${lastAlarm} -> Normal (${nivel.toFixed(\n      2\n    )} cm)`;\n    ctx.lastAlarm = null;\n  } else if (estadoActual !== \"Normal\") {\n    // Está en estado de alarma\n    if (lastAlarm === null) {\n      // Primera alarma\n      notificar = true;\n      mensaje = `ALARMA ${estadoActual}: Nivel ${nivel.toFixed(2)} cm`;\n      ctx.lastAlarm = estadoActual;\n    } else if (tendencia === \"descarga\") {\n      // En descarga, siempre reportar cambio a estado más crítico o menos crítico\n      notificar = true;\n      mensaje = `ALARMA ${estadoActual}: Nivel ${nivel.toFixed(2)} cm`;\n      ctx.lastAlarm = estadoActual;\n    } else if (tendencia === \"carga\") {\n      // En carga, solo reportar si se pasa a un estado más crítico (de B a BB por ejemplo)\n      const niveles = [\"Normal\", \"Bajo\", \"Bajo-Bajo\", \"Alto\", \"Alto-Alto\"];\n      const severidad = (e) => niveles.indexOf(e);\n      if (severidad(estadoActual) > severidad(lastAlarm)) {\n        notificar = true;\n        mensaje = `ALARMA ${estadoActual}: Nivel ${nivel.toFixed(2)} cm`;\n        ctx.lastAlarm = estadoActual;\n      } // Si baja severidad en carga, no notificar\n    }\n  }\n}\n\n// 7. Guardar contexto y preparar salida\nctx.ultimoNivel = nivel;\nflow.set(\"nivelContex\", ctx);\n\nflow.set(\"alarma_actual\",estadoActual)\n\nmsg.payload = {\n  id: id,\n  nivel: nivel,\n  estado_actual: estadoActual,\n  estado_anterior: lastAlarm,\n  requiere_notificacion: notificar,\n  mensaje: mensaje,\n  umbrales: um, // Para depuración\n  tendencia: tendencia || \"sin cambios\",\n  temperatura: temperatura,\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 250,
+        "y": 400,
+        "wires": [
+            [
+                "46991ee5dd19d7fd",
+                "ad4c77dbc1291da5"
+            ]
+        ]
+    },
+    {
+        "id": "5330160ce694669f",
+        "type": "debug",
+        "z": "f8bcc2348cc2da98",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 870,
+        "y": 300,
+        "wires": []
     },
     {
         "id": "5adc8ec081586556",

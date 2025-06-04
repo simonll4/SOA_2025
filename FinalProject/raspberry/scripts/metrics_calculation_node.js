@@ -1,189 +1,199 @@
 const container = global.get("container");
-if (!container || !container.calibration_table || !container.height) {
+if (
+  !container ||
+  !container.calibration_table ||
+  !container.height ||
+  !container.thresholds
+) {
   node.error("Datos del recipiente incompletos o no definidos");
   return null;
 }
 
+// 1. CONFIGURACIÓN AJUSTADA
+const config = {
+  TOLERANCIA_NIVEL_CERO: 0.05,
+  TOLERANCIA_CAUDAL: 0.001,
+  TOLERANCIA_UMBRAL: 0.01,
+
+  INTERVALO_MINIMO: 0.5,
+  RETRASO_ESTABILIZACION: 2,
+
+  HISTERESIS: 0.02,
+  MIN_MUESTRAS_OPERACION: 1,
+  TAMANO_HISTORIAL: 3,
+
+  FACTOR_SUAVIZADO_PRINCIPAL: 0.7,
+  FACTOR_SUAVIZADO_SECUNDARIO: 0.3,
+  FACTOR_SUAVIZADO_ETA: 0.4,
+  FACTOR_SUAVIZADO_NIVEL: 0.3,
+
+  MAX_ETA: 24 * 3600,
+  NIVEL_MAX_OVERSHOOT: 0.5,
+};
+
+// 2. DATOS BÁSICOS
 const tabla = container.calibration_table;
 const volumenMax = tabla[tabla.length - 1].volume;
+const alturaMax = tabla[tabla.length - 1].height;
 
-// Configuración optimizada para suavizado
-const TOLERANCIA_NIVEL_CERO = 0.1; // cm
-const TOLERANCIA_NIVEL = 0.1; // cm
-const TOLERANCIA_CAUDAL = 0.002; // L/s
-const INTERVALO_MINIMO = 1; // segundos
-const HISTERESIS = 0.05; // cm
-const MIN_MUESTRAS_OPERACION = 5; // Más muestras para mayor estabilidad
-const FACTOR_SUAVIZADO_PRINCIPAL = 0.4; // Suavizado principal
-const FACTOR_SUAVIZADO_SECUNDARIO = 0.2; // Suavizado secundario
-const TAMANO_HISTORIAL = 10; // Mayor historial para media móvil
-const FACTOR_SUAVIZADO_ETA = 0.7; // Suavizado específico para ETA
+// 3. UMBRALES
+function calcularUmbrales() {
+  const thresholds = container.thresholds;
+  const h_h_volumen = interpolar(tabla, thresholds.high_high * alturaMax);
+  const l_l_volumen = interpolar(tabla, thresholds.low_low * alturaMax);
+  const h_h_volumen_tol = h_h_volumen - volumenMax * config.TOLERANCIA_UMBRAL;
+  const l_l_volumen_tol = l_l_volumen + volumenMax * config.TOLERANCIA_UMBRAL;
 
-// Leer datos del sensor
-let alturaSensorFondo = container.sensor_height;
+  return {
+    h_h: h_h_volumen,
+    l_l: l_l_volumen,
+    h_h_tol: h_h_volumen_tol,
+    l_l_tol: l_l_volumen_tol,
+    h_h_nivel: thresholds.high_high * alturaMax,
+    l_l_nivel: thresholds.low_low * alturaMax,
+  };
+}
+
+const umbrales = calcularUmbrales();
+
+// 4. INTERPOLACIÓN
+function interpolar(tabla, h) {
+  if (h <= tabla[0].height) return tabla[0].volume;
+  if (h >= tabla[tabla.length - 1].height)
+    return tabla[tabla.length - 1].volume;
+
+  for (let i = 0; i < tabla.length - 1; i++) {
+    if (h >= tabla[i].height && h <= tabla[i + 1].height) {
+      const f = (h - tabla[i].height) / (tabla[i + 1].height - tabla[i].height);
+      return tabla[i].volume + f * (tabla[i + 1].volume - tabla[i].volume);
+    }
+  }
+  return volumenMax;
+}
+
+// 5. ESTADO ANTERIOR
+const prev = context.get("prev") || {
+  historialNivel: Array(config.TAMANO_HISTORIAL).fill(0),
+  historialQ: Array(config.TAMANO_HISTORIAL).fill(0),
+  ultimoEstable: { nivel: 0, volumen: 0, ts: 0 },
+};
+
+// 6. DATOS ACTUALES
+const alturaSensorFondo = container.sensor_height;
 const distancia = parseFloat(msg.payload.distance_cm);
 const T = parseFloat(msg.payload.temperature);
 const ts = Date.now();
 
-// Calcular altura del líquido con filtro de cero
-const nivel = alturaSensorFondo - distancia;
-let nivelAjustado = Math.max(0, nivel);
+// Nivel ajustado
+const nivelBruto = Math.max(0, alturaSensorFondo - distancia);
+const nivelAjustado =
+  nivelBruto <= config.TOLERANCIA_NIVEL_CERO ? 0 : nivelBruto;
 
-// Aplicar filtro de cero con histéresis
-const prev = context.get("prev") || {};
-if (nivelAjustado <= TOLERANCIA_NIVEL_CERO) {
-  if ((prev.nivelAjustado || 0) <= TOLERANCIA_NIVEL_CERO + HISTERESIS) {
-    nivelAjustado = 0;
-  }
-}
+// Suavizado del nivel
+prev.historialNivel.shift();
+prev.historialNivel.push(nivelAjustado);
+const nivelFiltrado =
+  prev.historialNivel.reduce((s, v) => s + v, 0) / config.TAMANO_HISTORIAL;
 
-// Interpolación lineal para volumen
-function interpolar(tabla, h) {
-  for (let i = 0; i < tabla.length - 1; i++) {
-    let a = tabla[i];
-    let b = tabla[i + 1];
-    if (h >= a.height && h <= b.height) {
-      let f = (h - a.height) / (b.height - a.height);
-      return a.volume + f * (b.volume - a.volume);
-    }
-  }
-  return h <= tabla[0].height
-    ? tabla[0].volume
-    : tabla[tabla.length - 1].volume;
-}
-
-// Volumen corregido por temperatura
+// 7. VOLUMEN AJUSTADO
 const beta = 0.000214;
 const tRef = 20;
-const V0 = interpolar(tabla, nivelAjustado);
+const V0 = interpolar(tabla, nivelFiltrado);
 let Vadj = V0 * (1 + beta * (T - tRef));
 Vadj = Math.max(0, Math.min(Vadj, volumenMax));
-
 if (nivelAjustado === 0) Vadj = 0;
 
-// Calcular diferencias
-const deltaT = (ts - (prev.ts || ts)) / 1000;
+// 8. CAUDAL
+const deltaT = Math.max(0.1, (ts - (prev.ts || ts)) / 1000);
 const deltaV = Vadj - (prev.V || Vadj);
+const Qtemp = deltaV / deltaT;
 
-// Obtener estado anterior
-let estado = prev.estado || "reposo";
-let Q = prev.Q || 0;
+// node.warn(ΔV=${deltaV.toFixed(5)}, ΔT=${deltaT.toFixed(3)}, Qtemp=${Qtemp.toFixed(5)});
+
+const mediaMovil =
+  prev.historialQ.reduce((s, v) => s + v, 0) / config.TAMANO_HISTORIAL;
+const Q =
+  config.FACTOR_SUAVIZADO_PRINCIPAL * Qtemp +
+  (1 - config.FACTOR_SUAVIZADO_PRINCIPAL) * mediaMovil;
+
+prev.historialQ.shift();
+prev.historialQ.push(Qtemp);
+
+// 9. ESTADO ACTUAL SIMPLIFICADO
+let estado;
+if (Math.abs(Q) > config.TOLERANCIA_CAUDAL) {
+  estado = Q < 0 ? "vaciado" : "llenado";
+} else {
+  estado = "reposo";
+}
+
+// 10. ETA
 let ETA = prev.ETA || 0;
-let contadorOperacion = prev.contadorOperacion || 0;
-let historialQ = prev.historialQ || Array(TAMANO_HISTORIAL).fill(0);
-
-// Solo procesar si ha pasado tiempo suficiente
-if (deltaT >= INTERVALO_MINIMO) {
-  // Calcular caudal temporal
-  const Qtemp = deltaT > 0 ? deltaV / deltaT : 0;
-
-  // Actualizar historial de caudales
-  historialQ.shift();
-  historialQ.push(Qtemp);
-
-  // 1. Calcular media móvil del historial
-  const mediaMovil =
-    historialQ.reduce((sum, val) => sum + val, 0) / historialQ.length;
-
-  // 2. Aplicar doble suavizado exponencial
-  const Qfiltrado1 =
-    FACTOR_SUAVIZADO_PRINCIPAL * Qtemp +
-    (1 - FACTOR_SUAVIZADO_PRINCIPAL) * (prev.Q || 0);
-  const Qfiltrado2 =
-    FACTOR_SUAVIZADO_SECUNDARIO * mediaMovil +
-    (1 - FACTOR_SUAVIZADO_SECUNDARIO) * Qfiltrado1;
-
-  // 3. Combinación ponderada de ambos métodos
-  const Qfiltrado = 0.7 * Qfiltrado2 + 0.3 * mediaMovil;
-
-  // Detección de operación con umbral más estable
-  const umbralOperacion = TOLERANCIA_CAUDAL * 1.5;
-  if (Math.abs(Qfiltrado) > umbralOperacion) {
-    contadorOperacion = Math.min(
-      contadorOperacion + 1,
-      MIN_MUESTRAS_OPERACION * 2
+if (Math.abs(Q) > config.TOLERANCIA_CAUDAL && isFinite(Q)) {
+  if (estado === "llenado") {
+    const volumenObjetivo = Math.min(
+      umbrales.h_h,
+      volumenMax - config.NIVEL_MAX_OVERSHOOT
     );
-  } else {
-    contadorOperacion = Math.max(contadorOperacion - 1, 0);
+    const rawETA = Vadj >= volumenObjetivo ? 0 : (volumenObjetivo - Vadj) / Q;
+    ETA =
+      config.FACTOR_SUAVIZADO_ETA * rawETA +
+      (1 - config.FACTOR_SUAVIZADO_ETA) * (prev.ETA || rawETA);
+  } else if (estado === "vaciado") {
+    const rawETA =
+      Vadj <= umbrales.l_l_tol ? 0 : (Vadj - umbrales.l_l) / Math.abs(Q);
+    ETA =
+      config.FACTOR_SUAVIZADO_ETA * rawETA +
+      (1 - config.FACTOR_SUAVIZADO_ETA) * (prev.ETA || rawETA);
   }
-
-  // Solo cambiar estado si tenemos suficiente confianza
-  if (contadorOperacion >= MIN_MUESTRAS_OPERACION) {
-    Q = Qfiltrado;
-    estado =
-      Q < -TOLERANCIA_CAUDAL
-        ? "vaciado"
-        : Q > TOLERANCIA_CAUDAL
-        ? "llenado"
-        : "reposo";
-
-    // Cálculo suavizado del ETA
-    if (Math.abs(Q) > TOLERANCIA_CAUDAL * 2 && isFinite(Q)) {
-      if (estado === "llenado" && Vadj < volumenMax * 0.99) {
-        const rawETA = (volumenMax - Vadj) / Q;
-        ETA = prev.ETA
-          ? FACTOR_SUAVIZADO_ETA * rawETA +
-            (1 - FACTOR_SUAVIZADO_ETA) * prev.ETA
-          : rawETA;
-      } else if (estado === "vaciado" && Vadj > volumenMax * 0.01) {
-        const rawETA = Vadj / Math.abs(Q);
-        ETA = prev.ETA
-          ? FACTOR_SUAVIZADO_ETA * rawETA +
-            (1 - FACTOR_SUAVIZADO_ETA) * prev.ETA
-          : rawETA;
-      }
-    } else {
-      ETA = prev.ETA || 0; // Mantener último ETA válido
-    }
-  } else if (contadorOperacion === 0) {
-    estado = "reposo";
-    Q = 0;
-    // Reducir ETA gradualmente en lugar de resetearlo
-    ETA = prev.ETA ? prev.ETA * 0.9 : 0;
-  }
+  ETA = Math.min(Math.max(0, ETA), config.MAX_ETA);
+} else {
+  ETA = prev.ETA ? prev.ETA * 0.9 : 0;
 }
 
-// Guardar estado para próxima iteración
-context.set("prev", {
-  ts: ts,
-  V: Vadj,
-  nivelAjustado: nivelAjustado,
-  estado: estado,
-  Q: Q,
-  ETA: ETA,
-  contadorOperacion: contadorOperacion,
-  historialQ: historialQ,
-});
+// 11. NIVEL ESTABLE
+if (Math.abs(Q) < config.TOLERANCIA_CAUDAL) {
+  if (!prev.tsEstable) prev.tsEstable = ts;
+  if (ts - prev.tsEstable >= config.RETRASO_ESTABILIZACION * 1000) {
+    prev.ultimoEstable = { nivel: nivelFiltrado, volumen: Vadj, ts: ts };
+  }
+} else {
+  prev.tsEstable = null;
+}
 
-// Función para formatear valores
+// 12. ACTUALIZAR CONTEXTO
+prev.ts = ts;
+prev.V = Vadj;
+prev.nivelAjustado = nivelFiltrado;
+prev.estado = estado;
+prev.Q = estado !== "reposo" ? Q : 0;
+prev.ETA = ETA;
+
+// 13. FORMATOS
 function formatValue(value, decimals) {
-  return Math.abs(value) < Math.pow(10, -decimals) ? 0 : value;
+  if (value === undefined || value === null) return "0.000";
+  const lim = Math.pow(10, -decimals);
+  return value > -lim && value < lim ? "0.000" : value.toFixed(decimals);
 }
 
-// Datos de depuración
-msg.debug = {
-  deltaT: deltaT.toFixed(2),
-  deltaV: deltaV.toFixed(4),
-  Qtemp: (deltaT > 0 ? deltaV / deltaT : 0).toFixed(4),
-  volumen: Vadj.toFixed(4),
-  nivel: nivelAjustado.toFixed(2),
-  media_movil: (
-    historialQ.reduce((sum, val) => sum + val, 0) / historialQ.length
-  ).toFixed(4),
-  estado: estado,
-  contador: contadorOperacion,
-};
+function formatValueCaudal(value, decimals) {
+  if (value === undefined || value === null) return "0.0000";
+  return value.toFixed(decimals); // no fuerza a 0.0000 si es pequeño
+}
 
-// Salida final con mejor formato
-msg.payload = {
+// 14. SALIDA
+const payload = {
   id: container.id,
-  nivel_cm: formatValue(nivelAjustado, 1).toFixed(1),
+  nivel_cm: formatValue(nivelFiltrado, 2),
   temperatura_c: T.toFixed(1),
-  volumen_L: formatValue(Vadj, 1).toFixed(1),
-  // caudal_Lps: estado !== "reposo" ? formatValue(Math.abs(Q), 3).toFixed(3) : "0.000", // Más decimales para ver suavizado
-  caudal_Lps: estado !== "reposo" ? formatValue(Q, 3).toFixed(3) : "0.000",
-  ETA_segundos: estado !== "reposo" ? Math.max(0, Math.round(ETA)) : "0",
+  volumen_L: formatValue(Vadj, 2),
+  caudal_Lps: prev.estado !== "reposo" ? formatValueCaudal(prev.Q, 4) : "0.000",
+  ETA_segundos:
+    prev.estado !== "reposo" ? Math.max(0, Math.round(prev.ETA)) : "0",
+  estado: prev.estado,
   timestamp: msg.payload.timestamp || new Date(ts).toISOString(),
 };
 
+context.set("prev", prev);
+msg.payload = payload;
 return msg;
