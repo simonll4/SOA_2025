@@ -4,10 +4,10 @@
     "height": 20,
     "sensor_height": 25.88,
     "thresholds": {
-      "low_low": 0.1,
+      "low_low": 0.15,
       "low": 0.3,
-      "high": 0.8,
-      "high_high": 0.9
+      "high": 0.75,
+      "high_high": 0.85
     },
     "calibration_table": [
       { "height": 0.0, "volume": 0.0 },

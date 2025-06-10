@@ -14,8 +14,8 @@
         "bot": "fbf630c04e6274c2",
         "haserroroutput": false,
         "outputs": 1,
-        "x": 750,
-        "y": 440,
+        "x": 780,
+        "y": 700,
         "wires": [
             []
         ]
@@ -29,8 +29,8 @@
             "2c885bdccd1d375a",
             "3882d91c3416bb13"
         ],
-        "x": 575,
-        "y": 440,
+        "x": 605,
+        "y": 700,
         "wires": [
             [
                 "e55ef2b3ddcbd89c"
@@ -42,7 +42,7 @@
         "type": "telegram command",
         "z": "a1b2c3d4.56789",
         "name": "",
-        "command": "/ayuda",
+        "command": "/help",
         "description": "",
         "registercommand": false,
         "language": "",
@@ -199,8 +199,8 @@
             "ced61ed48fdc3c9e"
         ],
         "uncaught": false,
-        "x": 150,
-        "y": 440,
+        "x": 180,
+        "y": 700,
         "wires": [
             [
                 "e03d70152b1ca7bb"
@@ -219,8 +219,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 310,
-        "y": 440,
+        "x": 340,
+        "y": 700,
         "wires": [
             [
                 "2c885bdccd1d375a"
@@ -263,8 +263,8 @@
         "links": [
             "0e280d744c5a321c"
         ],
-        "x": 445,
-        "y": 440,
+        "x": 475,
+        "y": 700,
         "wires": []
     },
     {
@@ -379,7 +379,8 @@
         "y": 200,
         "wires": [
             [
-                "07d6cf5633042f00"
+                "07d6cf5633042f00",
+                "a575dcd31b75e01a"
             ],
             [
                 "424b64c567722183"
@@ -456,8 +457,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 130,
-        "y": 380,
+        "x": 190,
+        "y": 620,
         "wires": [
             [
                 "e2856ee607b34e8f"
@@ -476,9 +477,197 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 410,
-        "y": 380,
+        "x": 510,
+        "y": 620,
         "wires": []
+    },
+    {
+        "id": "a575dcd31b75e01a",
+        "type": "debug",
+        "z": "a1b2c3d4.56789",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "0696b2921fa9dbec",
+        "type": "mqtt out",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "topic": "/startf",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "f1g2h3i4.890c",
+        "x": 370,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "29e3275e8fa5dcf9",
+        "type": "mqtt out",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "topic": "/stopfp",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "f1g2h3i4.890c",
+        "x": 370,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "6b66d66343f66c5a",
+        "type": "mqtt out",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "topic": "/startd",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "f1g2h3i4.890c",
+        "x": 370,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "8867824a210885b7",
+        "type": "mqtt out",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "topic": "/stopdp",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "f1g2h3i4.890c",
+        "x": 380,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "8818edbd2a3aa2c8",
+        "type": "telegram command",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "command": "/startf",
+        "description": "",
+        "registercommand": false,
+        "language": "",
+        "scope": "default",
+        "bot": "fbf630c04e6274c2",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 190,
+        "y": 340,
+        "wires": [
+            [
+                "0696b2921fa9dbec"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "4310735b3133b205",
+        "type": "telegram command",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "command": "/stopfp",
+        "description": "",
+        "registercommand": false,
+        "language": "",
+        "scope": "default",
+        "bot": "fbf630c04e6274c2",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 190,
+        "y": 400,
+        "wires": [
+            [
+                "29e3275e8fa5dcf9"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "4d2aed57cc96ebad",
+        "type": "telegram command",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "command": "/startd",
+        "description": "",
+        "registercommand": false,
+        "language": "",
+        "scope": "default",
+        "bot": "fbf630c04e6274c2",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 190,
+        "y": 460,
+        "wires": [
+            [
+                "6b66d66343f66c5a"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "6b7bacebceaf5fbe",
+        "type": "telegram command",
+        "z": "a1b2c3d4.56789",
+        "name": "",
+        "command": "/stopdp",
+        "description": "",
+        "registercommand": false,
+        "language": "",
+        "scope": "default",
+        "bot": "fbf630c04e6274c2",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 190,
+        "y": 520,
+        "wires": [
+            [
+                "8867824a210885b7"
+            ],
+            []
+        ]
     },
     {
         "id": "fbf630c04e6274c2",
@@ -489,7 +678,7 @@
         "baseapiurl": "",
         "testenvironment": false,
         "updatemode": "polling",
-        "pollinterval": 300,
+        "pollinterval": "1000",
         "usesocks": false,
         "sockshost": "",
         "socksprotocol": "socks5",

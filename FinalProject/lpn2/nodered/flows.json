@@ -21,10 +21,11 @@
         "rh": 0,
         "inputs": 0,
         "x": 170,
-        "y": 120,
+        "y": 60,
         "wires": [
             [
-                "7beb4612fcaffbe7"
+                "7beb4612fcaffbe7",
+                "b7f4bd98b1d91a13"
             ]
         ]
     },
@@ -33,7 +34,7 @@
         "type": "function",
         "z": "92178adcb3294a7f",
         "name": "function 1",
-        "func": "try {\n    const originalTimestamp = msg.payload.timestamp;\n\n    // Guardar el ID del contenedor ANTES de modificar el payload\n    const containerId = msg.payload.id || msg.payload.id_contenedor || \"unknown\";\n\n    // Preparar los fields (datos numéricos)\n    const fields = {\n        nivel_cm: Number(parseFloat(msg.payload.nivel_cm)) || 0,\n        temperatura_c: Number(parseFloat(msg.payload.temperatura_c)) || 0,\n        volumen_L: Number(parseFloat(msg.payload.volumen_L)) || 0,\n        caudal_Lps: Number(parseFloat(msg.payload.caudal_Lps)) || 0,\n        ETA_segundos: Number(parseFloat(msg.payload.ETA_segundos)) || 0\n    };\n\n    // Preparar los tags (metadatos para filtrado)\n    const tags = {\n        id_contenedor: String(containerId)\n    };\n\n    // Estructura correcta para el nodo influxdb out: [fields, tags]\n    msg.payload = [fields, tags];\n\n    // Timestamp correcto\n    msg.timestamp = new Date(originalTimestamp || Date.now());\n\n    node.log(\"Fields: \" + JSON.stringify(fields));\n    node.log(\"Tags: \" + JSON.stringify(tags));\n    node.log(\"Container ID: \" + containerId);\n\n    return msg;\n\n} catch (error) {\n    node.error(\"Error: \" + error.message);\n    return null;\n}",
+        "func": "try {\n    const originalTimestamp = msg.payload.timestamp;\n\n    // Separar fields del cuerpo\n    msg.payload = {\n        nivel_cm: Number(parseFloat(msg.payload.nivel_cm)) || 0,\n        temperatura_c: Number(parseFloat(msg.payload.temperatura_c)) || 0,\n        volumen_L: Number(parseFloat(msg.payload.volumen_L)) || 0,\n        caudal_Lps: Number(parseFloat(msg.payload.caudal_Lps)) || 0,\n        ETA_segundos: Number(parseFloat(msg.payload.ETA_segundos)) || 0,\n        timestamp_field: originalTimestamp\n    };\n\n    // Definir el tag como parte de msg.tags\n    msg.tags = {\n        id_contenedor: String(msg.payload.id || \"unknown\")\n    };\n\n    // Timestamp correcto\n    msg.timestamp = new Date(originalTimestamp || Date.now());\n\n    node.log(\"Payload: \" + JSON.stringify(msg.payload));\n    node.log(\"Tags: \" + JSON.stringify(msg.tags));\n    return msg;\n\n} catch (error) {\n    node.error(\"Error: \" + error.message);\n    return null;\n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -41,10 +42,11 @@
         "finalize": "",
         "libs": [],
         "x": 360,
-        "y": 120,
+        "y": 60,
         "wires": [
             [
-                "8d2ece87ebd78d18"
+                "8d2ece87ebd78d18",
+                "61dc7b351717e014"
             ]
         ]
     },
@@ -63,7 +65,39 @@
         "org": "LPN",
         "bucket": "tank-monitoring",
         "x": 600,
-        "y": 120,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "61dc7b351717e014",
+        "type": "debug",
+        "z": "92178adcb3294a7f",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 510,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "b7f4bd98b1d91a13",
+        "type": "debug",
+        "z": "92178adcb3294a7f",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 260,
+        "y": 160,
         "wires": []
     },
     {
