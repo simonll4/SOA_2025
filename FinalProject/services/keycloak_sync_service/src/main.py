@@ -2,8 +2,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import time
 import logging
 
-from sync.sync_users import sync_users
-from sync.config import SYNC_INTERVAL
+from src.sync.sync_users import sync_users
+from src.sync.config import SYNC_INTERVAL
 
 logging.basicConfig(level=logging.INFO)
 

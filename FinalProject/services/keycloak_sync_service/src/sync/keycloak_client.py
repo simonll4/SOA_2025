@@ -28,6 +28,8 @@ def fetch_users(token):
     return response.json()
 
 
+# TODO solo se traen los roles del realm, no de los clientes
+#  cuando se defina el cliente con los roles ver esto
 def fetch_user_roles(token, user_id):
     url = f"{KEYCLOAK_URL}/admin/realms/{REALM}/users/{user_id}/role-mappings/realm"
     headers = {"Authorization": f"Bearer {token}"}

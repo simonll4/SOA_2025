@@ -20,11 +20,13 @@ users_table = Table(
     "users",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("keycloak_id", String, unique=True),
-    Column("username", String, nullable=False),
+    Column("keycloak_id", String),
+    Column("username", String, nullable=False, unique=True),
     Column("roles", ARRAY(Text), nullable=False),
+    Column("enabled", Integer, default=1),  # 1 = activo, 0 = eliminado (soft delete)
     Column("last_synced", TIMESTAMP, default=lambda: datetime.now(UTC)),
 )
+
 
 
 metadata.create_all(engine)
