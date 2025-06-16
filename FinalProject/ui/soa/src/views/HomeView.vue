@@ -358,3 +358,22 @@ button:disabled {
   text-align: left;
 }
 </style>
+
+
+
+    <!-- <div class="container-id-input">
+      <label for="containerId">Container ID:</label>
+      <input
+        id="containerId"
+        v-model="containerId"
+        type="text"
+        placeholder="Ingrese el Container ID"
+      />
+    </div>
+
+    <iframe
+      :src="`https://lpn3.crabdance.com/d-solo/tank-monitoring-001/f09f8fad-tank-monitoring-dashboard?orgId=1&from=1750107445797&to=1750107745797&timezone=browser&var-container_id=${String(containerId)}&var-height=20&refresh=5s&panelId=3&__feature.dashboardSceneSolo`"
+      width="450"
+      height="200"
+      frameborder="0"
+    ></iframe>-->
