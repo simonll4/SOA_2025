@@ -1,6 +1,8 @@
 comandos.txt
 
 .env
+.env-prod
+
 .venv
 
 Infrastructures/3.node-red-infra/nodered-data/settings.js

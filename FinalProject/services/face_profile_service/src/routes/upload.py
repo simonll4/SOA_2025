@@ -1,23 +1,46 @@
-from flask import Blueprint, request, jsonify
+from flask import request, jsonify
+import uuid
+
 from src.embeddings.generator import generate_embedding
 from src.embeddings.storage import save_embedding
+from src.auth.keycloak_auth import require_auth
 
-api_blueprint = Blueprint("api", __name__)
 
-
-@api_blueprint.route("/upload", methods=["POST"])
-def upload_image():
+def is_valid_uuid(val: str) -> bool:
     try:
-        user_id = request.form.get("user_id", type=int)
-        file = request.files.get("file")
+        uuid_obj = uuid.UUID(val, version=4)
+        return str(uuid_obj) == val  # asegura que no es solo "parseable"
+    except ValueError:
+        return False
 
-        if not user_id or not file:
+
+@require_auth(roles=["ADMIN_ROLE"])
+def upload_image():
+
+    try:
+        file = request.files.get("file")
+        user_keycloak_id = request.form.get("user_id")
+
+        if not user_keycloak_id or not is_valid_uuid(user_keycloak_id):
             return (
                 jsonify(
                     {
                         "status": "error",
                         "code": 400,
-                        "message": "Se requieren user_id y archivo de imagen",
+                        "message": "El ID del usuario no tiene formato UUID válido",
+                        "data": {},
+                    }
+                ),
+                400,
+            )
+
+        if not file:
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "code": 400,
+                        "message": "Se requiere archivo de imagen",
                         "data": {},
                     }
                 ),
@@ -25,8 +48,7 @@ def upload_image():
             )
 
         embedding = generate_embedding(file)
-        print(f"Embedding generado: {embedding}")
-        result = save_embedding(user_id, embedding)
+        result = save_embedding(user_keycloak_id, embedding)
 
         if result["status"] == "duplicate":
             return (
@@ -36,7 +58,7 @@ def upload_image():
                         "code": result["code"],
                         "message": result["message"],
                         "data": {
-                            "existing_user_id": result["data"]["existing_user_id"]
+                            "existing_user_id": result["data"].get("existing_user_id")
                         },
                     }
                 ),
@@ -52,17 +74,15 @@ def upload_image():
                     "status": "success",
                     "code": 200,
                     "message": "Imagen procesada y almacenada exitosamente",
-                    "data": {"user_id": user_id, "embedding_length": len(embedding)},
+                    "data": {
+                        "user_id": user_keycloak_id,
+                        "embedding_length": len(embedding),
+                    },
                 }
             ),
             200,
         )
 
-    except ValueError as ve:
-        return (
-            jsonify({"status": "error", "code": 400, "message": str(ve), "data": {}}),
-            400,
-        )
     except Exception as e:
         return (
             jsonify(
