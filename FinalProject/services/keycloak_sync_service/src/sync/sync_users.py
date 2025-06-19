@@ -1,8 +1,12 @@
-from sqlalchemy.dialects.postgresql import insert
 import logging
 from datetime import datetime, UTC
 
-from .keycloak_client import get_admin_token, fetch_users, fetch_user_roles
+from .keycloak_client import (
+    get_admin_token,
+    fetch_users,
+    get_client_id,
+    fetch_user_client_roles,
+)
 from .database import Session, users_table
 
 log = logging.getLogger("sync")
@@ -13,26 +17,26 @@ def sync_users():
     try:
         token = get_admin_token()
         kc_users = fetch_users(token)
+        client_id = get_client_id(token, "vue-app")  # ← usamos este cliente
     except Exception as e:
-        log.error(f"Error obteniendo usuarios desde Keycloak: {e}")
+        log.error(f"Error obteniendo datos desde Keycloak: {e}")
         return
 
     session = Session()
     try:
         existing_users = {u.username: u for u in session.query(users_table).all()}
-
         usernames_in_kc = set()
 
         for user in kc_users:
             username = user.get("username")
             keycloak_id = user.get("id")
-            roles = fetch_user_roles(token, keycloak_id)
+            roles = fetch_user_client_roles(token, keycloak_id, client_id)
             usernames_in_kc.add(username)
 
             existing = existing_users.get(username)
 
             if existing:
-                # Si el keycloak_id cambió, actualizamos
+                # Si el keycloak_id cambió o los roles o está deshabilitado, actualizamos
                 changes = {}
                 if existing.keycloak_id != keycloak_id:
                     changes["keycloak_id"] = keycloak_id
@@ -83,56 +87,3 @@ def sync_users():
         session.rollback()
     finally:
         session.close()
-
-
-# def sync_users():
-#     log.info("Iniciando sincronización de usuarios...")
-#     token = get_admin_token()
-#     users = fetch_users(token)
-
-#     session = Session()
-#     keycloak_ids = set()
-
-#     for user in users:
-#         user_id = user.get("id")
-#         username = user.get("username")
-#         keycloak_ids.add(user_id)
-
-#         roles = fetch_user_roles(token, user_id)
-
-#         stmt = (
-#             insert(users_table)
-#             .values(
-#                 keycloak_id=user_id,
-#                 username=username,
-#                 roles=roles,
-#                 last_synced=datetime.now(UTC),
-#             )
-#             .on_conflict_do_update(
-#                 index_elements=["keycloak_id"],
-#                 set_={
-#                     "username": username,
-#                     "roles": roles,
-#                     "last_synced": datetime.now(UTC),
-#                 },
-#             )
-#         )
-#         session.execute(stmt)
-
-#     # TODO implemntar soporte para usuarios boorrados en Keycloak, usar name para indentificar users de modoo que si se vuelve activar un user coon el mismo name
-#     #se actualiza el id de keeycloack een el postgres local
-#     # Eliminar usuarios que ya no están en KeycloakI
-#     db_ids = {row[0] for row in session.query(users_table.c.keycloak_id).all()}
-#     ids_to_deactivate = db_ids - keycloak_ids
-
-#     if ids_to_deactivate:
-#         log.info(
-#             f"Eliminando {len(ids_to_deactivate)} usuarios que ya no están en Keycloak..."
-#         )
-#         session.execute(
-#             users_table.delete().where(users_table.c.keycloak_id.in_(ids_to_deactivate))
-#         )
-
-#     session.commit()
-#     session.close()
-#     log.info("Sincronización finalizada.")

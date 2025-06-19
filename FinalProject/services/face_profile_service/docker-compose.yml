@@ -10,10 +10,14 @@ services:
       - ./nginx:/etc/nginx/conf.d
       - certbot-conf:/etc/letsencrypt
       - certbot-www:/var/www/certbot
+    links:
+      - grafana
+      - face_profile_service
     networks:
       - grafana-network
     depends_on:
       - grafana
+      - face_profile_service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 30s
@@ -126,6 +130,43 @@ services:
       - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_STRICT=true
       - GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=false
 
+  face_profile_service:
+    image: simonll4/face_profile_service:1.0
+    container_name: face_profile_service
+    expose:
+      - "5001"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - grafana-network
+
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: pgvector_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: face_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - grafana-network
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: always
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+    ports:
+      - "8080"
+    networks:
+      - grafana-network
+
 networks:
   grafana-network:
     driver: bridge
@@ -134,3 +175,4 @@ volumes:
   certbot-conf:
   certbot-www:
   grafana-storage:
+  pgdata:

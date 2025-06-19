@@ -39,7 +39,9 @@
             <span v-if="upload.status === 'pending'">⏳ Pendiente</span>
             <span v-if="upload.status === 'uploading'">🔄 Subiendo...</span>
             <span v-if="upload.status === 'success'">✅ Exitoso</span>
-            <span v-if="upload.status === 'error'" style="color: black;">❌ {{ upload.message }}</span>
+            <span v-if="upload.status === 'error'" style="color: black"
+              >❌ {{ upload.message }}</span
+            >
           </p>
         </div>
       </div>
@@ -96,7 +98,9 @@ const submitForm = async () => {
     formData.append('user_id', userId.value)
 
     try {
-      const response = await axios.post('http://localhost:5001/upload', formData, {
+      // const response = await axios.post('https://lpn3.crabdance.com/api/profile/upload', formData, {
+      //const response = await axios.post('http://localhost:5001/upload', formData, {
+      const response = await axios.post('https://lpn3.crabdance.com/api/profile/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token.value}`,
@@ -111,6 +115,7 @@ const submitForm = async () => {
       }
     } catch (error) {
       upload.status = 'error'
+      console.log('Error al subir la imagen:', error)
       upload.message = error.response?.data?.message || 'Error al conectar con el servidor'
     }
   }
@@ -118,7 +123,6 @@ const submitForm = async () => {
   isLoading.value = false
 }
 </script>
-
 
 <style scoped>
 .upload-container {

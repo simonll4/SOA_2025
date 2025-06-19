@@ -72,10 +72,13 @@ def require_auth(roles=None):
                 return f(*args, **kwargs)
 
             except ExpiredSignatureError:
+                print("Token expirado")
                 return jsonify({"error": "Token expirado"}), 401
             except JWTError as e:
+                print(f"Error decodificando el token: {str(e)}")
                 return jsonify({"error": f"Token inválido: {str(e)}"}), 401
             except Exception as e:
+                print(f"Error autenticando: {str(e)}")
                 return jsonify({"error": f"Error autenticando: {str(e)}"}), 500
 
         return wrapper

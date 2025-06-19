@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-PORT = int(os.getenv("PORT", 5001))
+PORT = int(os.getenv("FACE_RECOGNITION_SERVICE_PORT"))
 DB_URL = os.getenv("DB_URL")
 KEYCLOAK_URL = os.getenv("KEYCLOAK_URL")
 REALM = os.getenv("REALM")

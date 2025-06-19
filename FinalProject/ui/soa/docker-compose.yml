@@ -1,5 +1,5 @@
 version: '3.8'
-
+#lo cree para levantar un contenedor de Keycloak con una base de datos PostgreSQL localmente para dev
 services:
   postgres:
     image: postgres:15
@@ -26,7 +26,7 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
-      - "8080:8080"
+      - '8080:8080'
     depends_on:
       - postgres
     networks:

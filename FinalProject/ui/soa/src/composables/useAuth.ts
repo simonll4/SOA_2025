@@ -4,8 +4,8 @@ import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 
 const keycloak = new Keycloak({
-  url: 'http://localhost:8080',
-  realm: 'SOA-2025-DEV',
+  url: 'https://keycloak.lpn1.crabdance.com/',
+  realm: 'SOA-2025',
   clientId: 'vue-app',
 })
 

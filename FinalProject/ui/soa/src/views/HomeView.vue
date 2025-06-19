@@ -165,6 +165,7 @@ button:disabled {
       <p><strong>Estado:</strong> {{ result.status }}</p>
       <p><strong>Etiqueta:</strong> {{ result.label }}</p>
       <p v-if="result.user_id"><strong>User ID:</strong> {{ result.user_id }}</p>
+      <p v-if="result.user_name"><strong>User Name:</strong> {{ result.user_name }}</p>
       <p v-if="result.similarity"><strong>Similitud:</strong> {{ result.similarity }}</p>
       <p v-if="result.confidence"><strong>Confianza:</strong> {{ result.confidence }}</p>
     </div>
@@ -187,7 +188,7 @@ const attempts = ref(0)
 const maxAttempts = 5
 const recognitionInterval = ref(null)
 const stream = ref(null)
-const faceStatus = ref('searching') // 'searching', 'found', 'error', 'none'
+const faceStatus = ref('searching')
 
 async function startRecognition() {
   error.value = ''
@@ -257,12 +258,14 @@ async function captureAndRecognize() {
     const formData = new FormData()
     formData.append('file', blob, 'capture.jpg')
 
-    const response = await axios.post('http://localhost:5000/recognize', formData, {
+    //const response = await axios.post('http://localhost:5000/recognize', formData, {
+    const response = await axios.post('https://lpn3.crabdance.com/api/face/recognize', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token.value}`,
       },
     })
+    console.log('Respuesta del servidor:', response.data)
 
     // Guardamos el resultado
     result.value = {
@@ -270,6 +273,8 @@ async function captureAndRecognize() {
       status: response.data.status,
       message: response.data.message,
     }
+
+    console.log('Resultado de reconocimiento:', result.value)
 
     if (response.data.status === 'success') {
       faceStatus.value = 'found'

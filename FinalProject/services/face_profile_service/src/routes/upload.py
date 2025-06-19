@@ -84,6 +84,7 @@ def upload_image():
         )
 
     except Exception as e:
+        print(f"Error procesando la imagen: {str(e)}")
         return (
             jsonify(
                 {

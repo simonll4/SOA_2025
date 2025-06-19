@@ -19,8 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libavcodec-dev \
     libavformat-dev \
     libswscale-dev \
-    libv4l-dev && \
-    rm -rf /var/lib/apt/lists/*
+    libv4l-dev && \ rm -rf /var/lib/apt/lists/*
 
 # Desactivar AVX si tu CPU no lo soporta y definir flags de compilación genéricos
 ENV DLIB_USE_AVX_INSTRUCTIONS=0
@@ -30,25 +29,23 @@ ENV CXXFLAGS="-march=x86-64 -mtune=generic"
 # Instalar numpy antes (requerido por dlib)
 RUN pip install --no-cache-dir numpy==2.2.6
 
-# Actualizar pip e instalar dlib y face_recognition directamente
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir dlib==20.0.0 face_recognition
+# Instalar dlib y face_recognition directamente
+RUN pip install --no-cache-dir dlib==20.0.0 face_recognition
 
-# Instalar el resto de las dependencias del proyecto
+# Copiar y usar requirements (sin numpy, dlib y face_recognition)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar el código fuente al contenedor
 COPY . .
 
-# Preparar entrypoint
+# Copiar y preparar entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Variables de entorno
 ENV PYTHONPATH=/app
-ENV FACE_RECOGNITION_SERVICE_PORT=5000
+ENV FACE_PROFILE_SERVICE_PORT=5001
 
 # Comando de inicio
 ENTRYPOINT ["/entrypoint.sh"]
-

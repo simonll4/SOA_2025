@@ -57,6 +57,7 @@ def save_embedding(user_keycloak_id: str, embedding: list[float]) -> Dict[str, A
         return RESPONSE_MESSAGES["embedding_saved"](user.username)
 
     except Exception as e:
+        print(f"Error al guardar el embedding: {str(e)}")
         session.rollback()
         return RESPONSE_MESSAGES["internal_error"](str(e))
 
