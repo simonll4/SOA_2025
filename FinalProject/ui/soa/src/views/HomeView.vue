@@ -170,6 +170,24 @@ button:disabled {
       <p v-if="result.confidence"><strong>Confianza:</strong> {{ result.confidence }}</p>
     </div>
   </div>
+
+  <div class="test-commands" v-if="token">
+    <h3>Probar comandos MQTT</h3>
+
+    <label>
+      Raspberry ID:
+      <input v-model="raspberryId" />
+    </label>
+
+    <div class="btn-row">
+      <button @click="sendTestCommand('/led', 'on')">LED ON</button>
+      <button @click="sendTestCommand('/led', 'off')">LED OFF</button>
+      <button @click="sendTestCommand('/moveservo', '90')">Mover Servo 90°</button>
+      <button @click="sendTestCommand('/rgb', '255 0 0')">RGB Rojo</button>
+      <button @click="sendTestCommand('/rgb', '0 255 0')">RGB Verde</button>
+      <button @click="sendTestCommand('/rgb', '0 0 255')">RGB Azul</button>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -292,9 +310,52 @@ async function captureAndRecognize() {
     loading.value = false
   }
 }
+
+const raspberryId = ref('raspi-1')
+
+async function sendTestCommand(topic, message) {
+  if (!raspberryId.value) {
+    error.value = 'Debe ingresar un ID de Raspberry'
+    return
+  }
+
+  try {
+    const payload = {
+      raspberry: raspberryId.value,
+      topic,
+      message,
+    }
+
+    const response = await axios.post('https://lpn2.crabdance.com/mqtt/command', payload, {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+      },
+    })
+
+    console.log('Comando MQTT enviado:', response.data)
+    alert(`Comando publicado correctamente en ${payload.raspberry}${topic}`)
+  } catch (err) {
+    console.error('Error enviando comando:', err)
+    error.value = err.response?.data?.error || 'Error enviando comando MQTT'
+  }
+}
 </script>
 
 <style scoped>
+.test-commands {
+  margin-top: 2rem;
+}
+
+.test-commands input {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+}
+
+.btn-row button {
+  margin: 0.3rem;
+  padding: 0.5rem 1rem;
+}
+
 .recognize-container {
   max-width: 600px;
   margin: 0 auto;
