@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ['b268-190-31-195-66.ngrok-free.app'], // reemplazá con tu subdominio actual de ngrok
+    allowedHosts: ['16ef-190-31-195-66.ngrok-free.app'], // reemplazá con tu subdominio actual de ngrok
     host: true, // permite que Vite escuche conexiones externas
     port: 5173,
   },

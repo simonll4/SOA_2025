@@ -68,7 +68,7 @@ fi
 cp ./nginx/default.conf.no-ssl ./nginx/default.conf
 
 # Iniciar servicios
-docker compose up -d grafana replic-db adminer keycloak_sync_service face_profile_service
+docker compose up -d grafana replic-db adminer keycloak_sync_service face_profile_service face_recognition_service
 
 docker compose up -d nginx
 wait_for_container_healthy "nginx" || exit 1

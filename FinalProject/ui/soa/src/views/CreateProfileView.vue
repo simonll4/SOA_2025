@@ -98,7 +98,6 @@ const submitForm = async () => {
     formData.append('user_id', userId.value)
 
     try {
-      // const response = await axios.post('https://lpn3.crabdance.com/api/profile/upload', formData, {
       //const response = await axios.post('http://localhost:5001/upload', formData, {
       const response = await axios.post('https://lpn3.crabdance.com/api/profile/upload', formData, {
         headers: {
