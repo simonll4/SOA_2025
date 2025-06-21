@@ -117,22 +117,12 @@ services:
     restart: always
     volumes:
       - grafana-storage:/var/lib/grafana
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini # Montar archivo de config
     networks:
       - lpn3-network
     environment:
       - GF_SERVER_ROOT_URL=https://lpn3.crabdance.com
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
-      - GF_AUTH_GENERIC_OAUTH_ENABLED=true
-      - GF_AUTH_GENERIC_OAUTH_NAME=Keycloak
-      - GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana
-      - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=aJuaXoYjsSQq7jiYUWx6kimkkhVv8GeN
-      - GF_AUTH_GENERIC_OAUTH_SCOPES=openid profile email
-      - GF_AUTH_GENERIC_OAUTH_AUTH_URL=https://keycloak.lpn1.crabdance.com/realms/SOA-2025/protocol/openid-connect/auth
-      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=https://keycloak.lpn1.crabdance.com/realms/SOA-2025/protocol/openid-connect/token
-      - GF_AUTH_GENERIC_OAUTH_API_URL=https://keycloak.lpn1.crabdance.com/realms/SOA-2025/protocol/openid-connect/userinfo
-      - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(groups[*],'admin') && 'Admin' || contains(groups[*],'grafana-editor') && 'Editor' || 'Viewer'
-      - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_STRICT=true
-      - GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=false
 
   keycloak_sync_service:
     image: simonll4/keycloak_sync_service:1.0
@@ -176,20 +166,6 @@ services:
         "--error-logfile",
         "-",
       ]
-
-  #  no  levanta  el entrypoint cuando inicia
-  # face_profile_service:
-  #   image: simonll4/face_profile_service:2.0
-  #   container_name: face_profile_service
-  #   depends_on:
-  #     - replic-db
-  #   environment:
-  #     - PYTHONPATH=/app
-  #   env_file:
-  #     - .env
-  #   restart: always
-  #   networks:
-  #     - lpn3-network
 
   face_recognition_service:
     image: simonll4/face_recognition_service:1.0
