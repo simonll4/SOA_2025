@@ -1,0 +1,47 @@
+
+services:
+  sync-app:
+    image: simonll4/keycloak_sync_service:1.0
+    container_name: db-sync-service
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - sync-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+  
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: pgvector_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: face_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - sync-network
+
+  adminer-service:
+    image: adminer:latest
+    container_name: adminer-service
+    restart: always
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+    ports:
+      - "8080:8080"
+    networks:
+      - sync-network
+
+networks:
+  sync-network:
+    driver: bridge
+volumes:
+  pgdata:

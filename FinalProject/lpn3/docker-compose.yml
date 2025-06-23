@@ -1,0 +1,231 @@
+services:
+  nginx:
+    image: nginx:1.23.3
+    container_name: nginx
+    restart: always
+    links:
+      - grafana
+      - adminer
+      - face_profile_service
+    depends_on:
+      - grafana
+      - adminer
+      - face_profile_service
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    networks:
+      - lpn3-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    depends_on:
+      - nginx
+    networks:
+      - lpn3-network
+    entrypoint: >
+      /bin/sh -c "
+        if [ ! -f /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem ]; then
+          certbot certonly --webroot -w /var/www/certbot --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn3.crabdance.com;
+        fi;
+        trap exit TERM;
+        while :; do
+          certbot renew --webroot -w /var/www/certbot;
+          sleep 30d & wait $${!};
+        done;"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  #certbot sidecar container
+  cert-exporter:
+    image: alpine:latest
+    container_name: cert-exporter
+    depends_on:
+      certbot:
+        condition: service_healthy
+    volumes:
+      - certbot-conf:/etc/letsencrypt:ro
+      - ./certs:/exported-certs
+    networks:
+      - lpn3-network
+    entrypoint: >
+      /bin/sh -c "
+        mkdir -p /exported-certs/lpn3.crabdance.com;
+
+        # Usar symlinks desde /etc/letsencrypt/live (que siempre apuntan al archivo más nuevo)
+        cp /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem /exported-certs/lpn3.crabdance.com/fullchain.pem;
+        cp /etc/letsencrypt/live/lpn3.crabdance.com/privkey.pem /exported-certs/lpn3.crabdance.com/privkey.pem;
+
+        chmod 644 /exported-certs/lpn3.crabdance.com/*.pem;
+        chmod 755 /exported-certs /exported-certs/lpn3.crabdance.com;
+        chown -R 1000:1000 /exported-certs;
+
+        trap exit TERM;
+        while :; do
+          echo 'Actualizando certificados exportados...';
+
+          cp /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem /exported-certs/lpn3.crabdance.com/fullchain.pem;
+          cp /etc/letsencrypt/live/lpn3.crabdance.com/privkey.pem /exported-certs/lpn3.crabdance.com/privkey.pem;
+
+          chmod 644 /exported-certs/lpn3.crabdance.com/*.pem;
+          chmod 755 /exported-certs /exported-certs/lpn3.crabdance.com;
+          chown -R 1000:1000 /exported-certs;
+
+          sleep 30d & wait $${!};
+        done;
+      "
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/exported-certs/lpn3.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: always
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini # Montar archivo de config
+    networks:
+      - lpn3-network
+    environment:
+      - GF_SERVER_ROOT_URL=https://lpn3.crabdance.com
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+
+  keycloak_sync_service:
+    image: simonll4/keycloak_sync_service:1.0
+    container_name: keycloak_sync_service
+    restart: unless-stopped
+    depends_on:
+      - replic-db
+    env_file:
+      - .env
+    networks:
+      - lpn3-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  face_profile_service:
+    image: simonll4/face_profile_service:1.0
+    container_name: face_profile_service
+    depends_on:
+      - replic-db
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - lpn3-network
+    environment:
+      PYTHONPATH: /app
+    command:
+      [
+        "gunicorn",
+        "-w",
+        "4",
+        "-b",
+        "0.0.0.0:5001",
+        "src.main:create_app()",
+        "--access-logfile",
+        "-",
+        "--error-logfile",
+        "-",
+      ]
+
+  face_recognition_service:
+    image: simonll4/face_recognition_service:1.0
+    container_name: face_recognition_service
+    depends_on:
+      - replic-db
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - lpn3-network
+    environment:
+      PYTHONPATH: /app
+    command:
+      [
+        "gunicorn",
+        "-w",
+        "4",
+        "-b",
+        "0.0.0.0:5000",
+        "src.main:create_app()",
+        "--access-logfile",
+        "-",
+        "--error-logfile",
+        "-",
+      ]
+
+  replic-db:
+    image: pgvector/pgvector:pg16
+    container_name: replic-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - lpn3-network
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: always
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+    expose:
+      - "8080"
+    networks:
+      - lpn3-network
+
+networks:
+  lpn3-network:
+    driver: bridge
+
+volumes:
+  certbot-conf:
+  certbot-www:
+  grafana-storage:
+  pgdata:

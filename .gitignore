@@ -1,10 +1,18 @@
 comandos.txt
 
 .env
+.env-prod
+.env-dev
+
 .venv
+
+__pycache__
 
 Infrastructures/3.node-red-infra/nodered-data/settings.js
 
 Monitoring/tig-stack/grafana/grafana.ini
+FinalProject/lpn3/grafana/grafana.ini
+FinalProject/lpn3/grafana/grafana-ejemplo.ini
 
 
+notas.txt

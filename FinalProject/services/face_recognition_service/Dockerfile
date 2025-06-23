@@ -1,0 +1,52 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Instalar dependencias del sistema necesarias para dlib y face_recognition
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake \
+    build-essential \
+    python3-dev \
+    libopenblas-dev \
+    liblapack-dev \
+    libx11-dev \
+    libgtk-3-dev \
+    libboost-all-dev \
+    libatlas-base-dev \
+    libjpeg-dev \
+    libtiff-dev \
+    libpng-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libv4l-dev && \ 
+    rm -rf /var/lib/apt/lists/*
+
+# Desactivar AVX si tu CPU no lo soporta y definir flags de compilación genéricos
+ENV DLIB_USE_AVX_INSTRUCTIONS=0
+ENV CFLAGS="-march=x86-64 -mtune=generic"
+ENV CXXFLAGS="-march=x86-64 -mtune=generic"
+
+# Instalar numpy antes (requerido por dlib)
+RUN pip install --no-cache-dir numpy==2.2.6
+
+# Instalar dlib y face_recognition directamente
+RUN pip install --no-cache-dir dlib==20.0.0 face_recognition
+
+# Copiar y usar requirements (sin numpy, dlib y face_recognition)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el código fuente al contenedor
+COPY . .
+
+# Copiar y preparar entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Variables de entorno
+ENV PYTHONPATH=/app
+ENV FACE_PROFILE_SERVICE_PORT=5001
+
+# Comando de inicio
+ENTRYPOINT ["/entrypoint.sh"]

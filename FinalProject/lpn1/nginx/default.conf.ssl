@@ -17,8 +17,8 @@ server {
     listen 443 ssl;
     server_name keycloak.lpn1.crabdance.com;
 
-    ssl_certificate     /etc/nginx/ssl/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/lpn1.crabdance.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/lpn1.crabdance.com/privkey.pem;
 
     location / {
         proxy_pass http://keycloak:8080;
@@ -32,8 +32,6 @@ server {
     }
 }
 
-
-# HTTPS para InfluxDB
 server {
   listen 443 ssl;
   server_name influxdb.lpn1.crabdance.com;
@@ -41,14 +39,32 @@ server {
   ssl_certificate /etc/letsencrypt/live/lpn1.crabdance.com/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/lpn1.crabdance.com/privkey.pem;
 
-  location / {
-    proxy_pass http://influxdb2:8086/;
+  location /oauth2/ {
+    proxy_pass http://oauth2-proxy:4180;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Scheme $scheme;
+    proxy_set_header X-Auth-Request-Redirect $request_uri;
+  
+    proxy_set_header Content-Length "";
+    proxy_pass_request_body off;
 
+    proxy_buffer_size        128k;
+    proxy_buffers            4 256k;
+    proxy_busy_buffers_size  256k;
+  }
+
+  location / {
+    auth_request /oauth2/auth;
+
+    error_page 401 = /oauth2/sign_in?rd=$scheme://$host$request_uri;
+
+    proxy_pass http://oauth2-proxy:4180;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header X-Forwarded-Host $host;
+
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";

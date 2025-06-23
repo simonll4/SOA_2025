@@ -1,0 +1,149 @@
+services:
+  nginx:
+    image: nginx:1.23.3
+    container_name: nginx
+    restart: always
+    links:
+      - nodered
+      - mqtt_proxy_service
+    depends_on:
+      nodered:
+        condition: service_started
+      mqtt_proxy_service:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    depends_on:
+      nginx:
+        condition: service_healthy
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c "
+        if [ ! -f /etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem ]; then
+          echo 'Certificado no encontrado. Creando uno nuevo...';
+          certbot certonly --webroot -w /var/www/certbot --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn2.crabdance.com;
+        else
+          echo 'Certificado ya existe. Saltando creación...';
+        fi;
+        trap exit TERM;
+        while :; do
+          echo 'Verificando renovación del certificado...';
+          certbot renew --webroot -w /var/www/certbot;
+          sleep 30d & wait $${!};
+        done;"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  #certbot sidecar container
+  cert-exporter:
+    image: alpine:latest
+    container_name: cert-exporter
+    depends_on:
+      certbot:
+        condition: service_healthy
+    volumes:
+      - certbot-conf:/etc/letsencrypt:ro
+      - ./certs:/exported-certs
+    entrypoint: >
+      /bin/sh -c "
+        mkdir -p /exported-certs/lpn2.crabdance.com;
+
+        # Usar symlinks desde /etc/letsencrypt/live (que siempre apuntan al archivo más nuevo)
+        cp /etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem /exported-certs/lpn2.crabdance.com/fullchain.pem;
+        cp /etc/letsencrypt/live/lpn2.crabdance.com/privkey.pem /exported-certs/lpn2.crabdance.com/privkey.pem;
+
+        chmod 644 /exported-certs/lpn2.crabdance.com/*.pem;
+        chmod 755 /exported-certs /exported-certs/lpn2.crabdance.com;
+        chown -R 1000:1000 /exported-certs;
+
+        trap exit TERM;
+        while :; do
+          echo 'Actualizando certificados exportados...';
+
+          cp /etc/letsencrypt/live/lpn2.crabdance.com/fullchain.pem /exported-certs/lpn2.crabdance.com/fullchain.pem;
+          cp /etc/letsencrypt/live/lpn2.crabdance.com/privkey.pem /exported-certs/lpn2.crabdance.com/privkey.pem;
+
+          chmod 644 /exported-certs/lpn2.crabdance.com/*.pem;
+          chmod 755 /exported-certs /exported-certs/lpn2.crabdance.com;
+          chown -R 1000:1000 /exported-certs;
+
+          sleep 30d & wait $${!};
+        done;
+      "
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/exported-certs/lpn2.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  nodered:
+    image: nodered/node-red:latest
+    container_name: nodered
+    restart: always
+    expose:
+      - "1880"
+    volumes:
+      - ./nodered-data:/data
+
+  mqtt_proxy_service:
+    image: simonll4/mqtt_proxy_service:1.0
+    container_name: mqtt_proxy_service
+    expose:
+      - "5002"
+    env_file:
+      - .env
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5002/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  mosquitto-SOA:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto-SOA
+    restart: always
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    network_mode: host
+
+volumes:
+  certbot-conf:
+  certbot-www:

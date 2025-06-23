@@ -1,0 +1,178 @@
+services:
+  nginx:
+    image: nginx:1.23.3
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    links:
+      - grafana
+      - face_profile_service
+    networks:
+      - grafana-network
+    depends_on:
+      - grafana
+      - face_profile_service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c "
+        if [ ! -f /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem ]; then
+          certbot certonly --webroot -w /var/www/certbot --agree-tos --no-eff-email --email gguillaumet011@alumnos.iua.edu.ar -d lpn3.crabdance.com;
+        fi;
+        trap exit TERM;
+        while :; do
+          certbot renew --webroot -w /var/www/certbot;
+          sleep 30d & wait $${!};
+        done;"
+    depends_on:
+      - nginx
+    networks:
+      - grafana-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  #certbot sidecar container
+  cert-exporter:
+    image: alpine:latest
+    container_name: cert-exporter
+    depends_on:
+      certbot:
+        condition: service_healthy
+    volumes:
+      - certbot-conf:/etc/letsencrypt:ro
+      - ./certs:/exported-certs
+    entrypoint: >
+      /bin/sh -c "
+        mkdir -p /exported-certs/lpn3.crabdance.com;
+
+        # Usar symlinks desde /etc/letsencrypt/live (que siempre apuntan al archivo más nuevo)
+        cp /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem /exported-certs/lpn3.crabdance.com/fullchain.pem;
+        cp /etc/letsencrypt/live/lpn3.crabdance.com/privkey.pem /exported-certs/lpn3.crabdance.com/privkey.pem;
+
+        chmod 644 /exported-certs/lpn3.crabdance.com/*.pem;
+        chmod 755 /exported-certs /exported-certs/lpn3.crabdance.com;
+        chown -R 1000:1000 /exported-certs;
+
+        trap exit TERM;
+        while :; do
+          echo 'Actualizando certificados exportados...';
+
+          cp /etc/letsencrypt/live/lpn3.crabdance.com/fullchain.pem /exported-certs/lpn3.crabdance.com/fullchain.pem;
+          cp /etc/letsencrypt/live/lpn3.crabdance.com/privkey.pem /exported-certs/lpn3.crabdance.com/privkey.pem;
+
+          chmod 644 /exported-certs/lpn3.crabdance.com/*.pem;
+          chmod 755 /exported-certs /exported-certs/lpn3.crabdance.com;
+          chown -R 1000:1000 /exported-certs;
+
+          sleep 30d & wait $${!};
+        done;
+      "
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "test",
+          "-f",
+          "/exported-certs/lpn3.crabdance.com/fullchain.pem",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: always
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - grafana-network
+    environment:
+      - GF_SERVER_ROOT_URL=https://lpn3.crabdance.com
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_AUTH_GENERIC_OAUTH_ENABLED=true
+      - GF_AUTH_GENERIC_OAUTH_NAME=Keycloak
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana
+      - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=aJuaXoYjsSQq7jiYUWx6kimkkhVv8GeN
+      - GF_AUTH_GENERIC_OAUTH_SCOPES=openid profile email
+      - GF_AUTH_GENERIC_OAUTH_AUTH_URL=https://keycloak.lpn1.crabdance.com/realms/SOA-2025/protocol/openid-connect/auth
+      - GF_AUTH_GENERIC_OAUTH_TOKEN_URL=https://keycloak.lpn1.crabdance.com/realms/SOA-2025/protocol/openid-connect/token
+      - GF_AUTH_GENERIC_OAUTH_API_URL=https://keycloak.lpn1.crabdance.com/realms/SOA-2025/protocol/openid-connect/userinfo
+      - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=contains(groups[*],'grafana-admin') && 'Admin' || contains(groups[*],'grafana-editor') && 'Editor' || 'Viewer'
+      - GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_STRICT=true
+      - GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP=false
+
+  face_profile_service:
+    image: simonll4/face_profile_service:1.0
+    container_name: face_profile_service
+    expose:
+      - "5001"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - grafana-network
+
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: pgvector_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: face_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - grafana-network
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: always
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+    ports:
+      - "8080"
+    networks:
+      - grafana-network
+
+networks:
+  grafana-network:
+    driver: bridge
+
+volumes:
+  certbot-conf:
+  certbot-www:
+  grafana-storage:
+  pgdata:

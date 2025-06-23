@@ -1,0 +1,15 @@
+services:
+  mqtt_proxy_service:
+    image: simonll4/mqtt_proxy_service:1.0
+    container_name: mqtt_proxy_service
+    ports:
+      - "5002:5002"
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5002/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

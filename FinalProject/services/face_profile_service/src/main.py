@@ -1,19 +1,19 @@
-# main.py (Flask)
-from flask import Flask, jsonify
-from src.routes.routes import api_blueprint
-from src.db.database import metadata, engine
+from flask import Flask
 from flask_cors import CORS
+from src.routes import api_blueprint
+from src.config import PORT
 
 
-app = Flask(__name__)
-app.register_blueprint(api_blueprint, url_prefix="/")
-CORS(app)
 
+def create_app():
+    app = Flask(__name__)
+    CORS(app)
+    app.register_blueprint(api_blueprint)
+    return app
 
-@app.route("/")
-def root():
-    return jsonify({"msg": "Face Recognition Service"})
-
+app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+
+    print(f"Servidor corriendo en http://localhost:{PORT}")
+    app.run(port=PORT, debug=True)
