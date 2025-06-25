@@ -24,6 +24,9 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    networks:
+      - internal
+
 
   certbot:
     image: certbot/certbot
@@ -118,21 +121,52 @@ services:
       - "1880"
     volumes:
       - ./nodered-data:/data
+    networks:
+      - internal
+    
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:latest
+    container_name: oauth2-proxy
+    restart: always
+    environment:
+      OAUTH2_PROXY_PROVIDER: oidc
+      OAUTH2_PROXY_CLIENT_ID: nodered
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
+      OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+      OAUTH2_PROXY_UPSTREAMS: "http://nodered:1880"
+      OAUTH2_PROXY_REDIRECT_URL: "https://lpn2.crabdance.com/oauth2/callback"
+      OAUTH2_PROXY_OIDC_ISSUER_URL: "https://keycloak.lpn1.crabdance.com/realms/SOA-2025"
+      OAUTH2_PROXY_COOKIE_SECURE: "true"
+      OAUTH2_PROXY_COOKIE_SAMESITE: "lax"
+      OAUTH2_PROXY_HTTP_ADDRESS: "0.0.0.0:4180"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_PASS_USER_HEADERS: "true"
+      OAUTH2_PROXY_PASS_ACCESS_TOKEN: "true"
+      OAUTH2_PROXY_PASS_AUTHORIZATION_HEADER: "true"
+      OAUTH2_PROXY_ALLOWED_GROUPS: "nodered-admin,nodered-editor,nodered-viewer"
+      OAUTH2_PROXY_OIDC_GROUPS_CLAIM: "roles"
+      OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL: "true"
+      OAUTH2_PROXY_WHITELIST_DOMAINS: "lpn2.crabdance.com"
+      OAUTH2_PROXY_ALLOWED_REDIRECT_DOMAINS: "lpn2.crabdance.com"
+      OAUTH2_PROXY_LOG_LEVEL: "debug"
+    expose:
+      - "4180"
+    networks:
+      - internal
 
   mqtt_proxy_service:
-    image: simonll4/mqtt_proxy_service:1.0
+    image: simonll4/mqtt_proxy_service:1.1
     container_name: mqtt_proxy_service
     expose:
       - "5002"
     env_file:
       - .env
     restart: always
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:5002/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+    networks:
+      - internal
 
   mosquitto-SOA:
     image: eclipse-mosquitto:latest
@@ -143,6 +177,10 @@ services:
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
     network_mode: host
+
+networks:
+  internal:
+    driver: bridge
 
 volumes:
   certbot-conf:
