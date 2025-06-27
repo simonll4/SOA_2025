@@ -7,7 +7,7 @@
       </div>
       <div class="ml-5 flex-1">
         <p class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Bienvenido de vuelta</p>
-        <p class="text-lg font-medium text-gray-900 dark:text-white">{{ userInfo?.username }}</p>
+        <p class="text-lg font-medium text-gray-900 dark:text-white capitalize">{{ userInfo?.name }}</p>
       </div>
       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="isAdmin ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'">{{ isAdmin ? 'Administrador' : 'Operador' }}</span>
     </div>

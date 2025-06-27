@@ -394,21 +394,9 @@ const setPresetColor = (color: string) => {
 }
 
 const handleCriticalCommand = async (command: any) => {
-  // Check if we have face verification token
-  if (!faceVerificationToken.value) {
-    // Show verification modal
-    pendingCriticalCommand.value = command
-    showFaceVerificationModal.value = true
-    return
-  }
-
-  // Execute command directly if already verified
-  try {
-    await executeCriticalCommand(command.topic, props.raspberryId)
-  } catch (error) {
-    console.error('Error executing critical command:', error)
-    // El error ya es manejado por el composable
-  }
+  // Siempre solicitar verificación biométrica para comandos críticos
+  pendingCriticalCommand.value = command
+  showFaceVerificationModal.value = true
 }
 
 const onFaceVerified = async () => {

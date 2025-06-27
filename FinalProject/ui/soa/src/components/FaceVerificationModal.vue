@@ -69,10 +69,6 @@
           {{ error }}
         </div>
 
-        <div v-if="attempts > 0" class="mt-2 text-gray-500 text-sm">
-          Intentos: {{ attempts }}/{{ maxAttempts }}
-        </div>
-
         <div v-if="result && result.status === 'success'" class="mt-4 p-3 bg-green-100 dark:bg-green-900 rounded-lg">
           <p class="text-green-800 dark:text-green-200 font-medium">
             ✓ Verificación exitosa
@@ -95,7 +91,7 @@
 <script setup lang="ts">
 import { useFaceVerification } from '@/composables/useFaceVerification'
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean
 }>()
 
@@ -124,6 +120,16 @@ const closeModal = () => {
 
 // Watch for successful verification
 import { watch } from 'vue'
+
+// Limpiar estados cuando se abre el modal
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen) {
+    // Limpiar estados anteriores
+    error.value = ''
+    result.value = null
+  }
+})
+
 watch(() => result.value, (newResult) => {
   if (newResult && newResult.status === 'success') {
     setTimeout(() => {

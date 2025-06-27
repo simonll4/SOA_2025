@@ -32,35 +32,73 @@
         </h2>
 
         <form @submit.prevent="submitForm" class="space-y-6">
-          <!-- User ID Input -->
+          <!-- User Selection -->
           <div>
-            <label for="user-id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              ID de Usuario (UUID de Keycloak)
+            <label for="user-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Seleccionar Usuario
             </label>
             <div class="mt-1 relative">
-              <input
-                id="user-id"
-                type="text"
-                v-model="userId"
-                placeholder="Ingrese UUID del usuario"
-                :disabled="isLoading"
-                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+              <select
+                id="user-select"
+                v-model="selectedUserId"
+                :disabled="isLoading || usersLoading"
+                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
                 :class="{
-                  'border-red-300 focus:ring-red-500 focus:border-red-500': !isValidUUID && userId.length > 0,
-                  'border-green-300 focus:ring-green-500 focus:border-green-500': isValidUUID
+                  'border-green-300 focus:ring-green-500 focus:border-green-500': selectedUserId
                 }"
-              />
-              <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <svg v-if="isValidUUID" class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              >
+                <option value="">{{ usersLoading ? 'Cargando usuarios...' : 'Seleccione un usuario' }}</option>
+                <option
+                  v-for="userOption in usersForSelect"
+                  :key="userOption.value"
+                  :value="userOption.value"
+                >
+                  {{ userOption.label }}
+                </option>
+              </select>
+              
+              <!-- Refresh button -->
+              <button
+                type="button"
+                @click="refreshUsers"
+                :disabled="usersLoading"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                title="Actualizar lista de usuarios"
+              >
+                <svg 
+                  :class="['h-5 w-5', { 'animate-spin': usersLoading }]" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <svg v-else-if="!isValidUUID && userId.length > 0" class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              </button>
+            </div>
+            
+            <!-- Selected user info -->
+            <div v-if="selectedUser" class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+              <div class="flex items-center space-x-2 text-sm">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span class="text-white text-xs font-medium">{{ selectedUser.username.charAt(0).toUpperCase() }}</span>
+                </div>
+                <div>
+                  <p class="font-medium text-blue-900 dark:text-blue-200">{{ selectedUser.username }}</p>
+                  <p class="text-blue-700 dark:text-blue-300 text-xs">
+                    {{ selectedUser.firstName || selectedUser.lastName ? `${[selectedUser.firstName, selectedUser.lastName].filter(Boolean).join(' ')}` : '' }}
+                    {{ selectedUser.email ? `• ${selectedUser.email}` : '' }}
+                  </p>
+                  <p class="text-blue-600 dark:text-blue-400 text-xs font-mono">UUID: {{ selectedUser.id }}</p>
+                </div>
               </div>
             </div>
-            <p v-if="!isValidUUID && userId.length > 0" class="mt-2 text-sm text-red-600 dark:text-red-400">
-              Por favor ingrese un UUID válido
+            
+            <!-- Users loading error -->
+            <p v-if="usersError" class="mt-2 text-sm text-red-600 dark:text-red-400">
+              {{ usersError }}
+              <button @click="refreshUsers" class="ml-2 underline hover:no-underline">
+                Reintentar
+              </button>
             </p>
           </div>
 
@@ -207,26 +245,39 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
+import { useKeycloakUsers } from '@/composables/useKeycloakUsers'
 
 const { token } = useAuth()
+const { 
+  usersForSelect, 
+  loading: usersLoading, 
+  error: usersError, 
+  fetchUsers, 
+  refreshUsers,
+  getUserById 
+} = useKeycloakUsers()
 
-const userId = ref('')
+const selectedUserId = ref('')
 const selectedFiles = ref([])
 const isLoading = ref(false)
 const uploads = ref([])
 const successMessage = ref('')
 const errorMessage = ref('')
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
-const isValidUUID = computed(() => {
-  return UUID_REGEX.test(userId.value)
+// Computed para obtener el usuario seleccionado
+const selectedUser = computed(() => {
+  return selectedUserId.value ? getUserById(selectedUserId.value) : null
 })
 
 const isFormValid = computed(() => {
-  return isValidUUID.value && selectedFiles.value.length > 0
+  return selectedUserId.value && selectedFiles.value.length > 0
+})
+
+// Cargar usuarios al montar el componente
+onMounted(() => {
+  fetchUsers()
 })
 
 const handleFileChange = (event) => {
@@ -260,7 +311,7 @@ const submitForm = async () => {
 
     const formData = new FormData()
     formData.append('file', upload.file)
-    formData.append('user_id', userId.value)
+    formData.append('user_id', selectedUserId.value) // Usar selectedUserId en lugar de userId
 
     try {
       const response = await fetch('https://lpn3.crabdance.com/api/profile/upload', {
@@ -290,7 +341,8 @@ const submitForm = async () => {
   }
 
   if (successCount > 0) {
-    successMessage.value = `${successCount} imagen(es) registrada(s) correctamente`
+    const userName = selectedUser.value?.username || 'usuario'
+    successMessage.value = `${successCount} imagen(es) registrada(s) correctamente para ${userName}`
   }
   
   if (errorCount > 0) {
@@ -301,7 +353,7 @@ const submitForm = async () => {
 
   if (errorCount === 0) {
     setTimeout(() => {
-      userId.value = ''
+      selectedUserId.value = ''
       selectedFiles.value = []
       uploads.value = []
       successMessage.value = ''

@@ -18,8 +18,8 @@ export function useAuth() {
   const { isAuthenticated, userInfo, token } = storeToRefs(store)
 
   // Computed roles helpers
-  const isAdmin = computed(() => userInfo.value?.roles?.includes('admin') || false)
-  const isOperator = computed(() => userInfo.value?.roles?.includes('user') || false)
+  const isAdmin = computed(() => userInfo.value?.roles?.includes('ADMIN_ROLE') || false)
+  const isOperator = computed(() => userInfo.value?.roles?.includes('USER_ROLE') || false)
 
   const initKeycloak = async () => {
     if (initialized.value) return
@@ -39,6 +39,7 @@ export function useAuth() {
           email: parsedToken?.email,
           //roles: parsedToken?.realm_access?.roles || [],
           roles: parsedToken?.resource_access?.['vue-app']?.roles || [],
+          name: parsedToken?.name,
         }
 
         store.setAuth(token, userInfo)

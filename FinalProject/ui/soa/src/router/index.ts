@@ -37,7 +37,7 @@ const router = createRouter({
           path: 'admin/profiles',
           name: 'admin-profiles',
           component: AdminProfilesView,
-          meta: { requiresAuth: true, requiresAdmin: true, title: 'Perfiles Biométricos' },
+          meta: { requiresAuth: true, requiresAdmin: false, title: 'Perfiles Biométricos' },
         },
       ],
     },

@@ -1,3 +1,49 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useRouter, useRoute, RouterLink, RouterView } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
+import { useTheme } from '@/composables/useTheme'
+import { useCommandPanel } from '@/composables/useCommandPanel'
+import CommandPanel from '@/components/CommandPanel.vue'
+import FaceVerificationModal from '@/components/FaceVerificationModal.vue'
+
+const router = useRouter()
+const route = useRoute()
+const { userInfo, logout, isAdmin } = useAuth()
+const { isDark, toggleTheme } = useTheme()
+const {
+  showCommandPanel,
+  selectedRaspberry,
+  showFaceVerification,
+  openCommandPanel,
+  closeCommandPanel,
+  handleCriticalCommand,
+  handleFaceVerified,
+  closeFaceVerification,
+} = useCommandPanel()
+
+const sidebarOpen = ref(false)
+
+console.log(userInfo.value)
+console.log(isAdmin.value)
+
+// pageTitle mapping
+const titleMap: Record<string, string> = {
+  '/dashboard': 'Panel de Control',
+  '/dashboard/admin/profiles': 'Perfiles Biométricos',
+}
+const pageTitle = computed(() => titleMap[route.path] || 'SOA Monitor')
+
+const toggleSidebar = () => (sidebarOpen.value = !sidebarOpen.value)
+const closeSidebar = () => (sidebarOpen.value = false)
+
+// expose
+defineExpose({ openCommandPanel })
+</script>
+
+<style scoped>
+</style> 
+
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- SIDEBAR -->
@@ -27,7 +73,7 @@
 
           <RouterLink
             v-if="isAdmin"
-            to="/admin/profiles"
+            to="/dashboard/admin/profiles"
             class="flex items-center px-4 py-2 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             :class="{ 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200': $route.path === '/admin/profiles' }"
           >
@@ -92,13 +138,12 @@
       </main>
     </div>
 
-    <!-- Command Panel Overlay -->
     <CommandPanel
       v-if="showCommandPanel"
       :raspberry-id="selectedRaspberry as string"
       @close="closeCommandPanel"
       @critical-command="handleCriticalCommand"
-    />
+    /> 
 
     <!-- Face Verification Modal -->
     <FaceVerificationModal
@@ -110,47 +155,4 @@
     <!-- Mobile overlay -->
     <div v-if="sidebarOpen" class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden" @click="closeSidebar"></div>
   </div>
-</template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter, useRoute, RouterLink, RouterView } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
-import { useTheme } from '@/composables/useTheme'
-import { useCommandPanel } from '@/composables/useCommandPanel'
-import CommandPanel from '@/components/CommandPanel.vue'
-import FaceVerificationModal from '@/components/FaceVerificationModal.vue'
-
-const router = useRouter()
-const route = useRoute()
-const { userInfo, logout, isAdmin } = useAuth()
-const { isDark, toggleTheme } = useTheme()
-const {
-  showCommandPanel,
-  selectedRaspberry,
-  showFaceVerification,
-  openCommandPanel,
-  closeCommandPanel,
-  handleCriticalCommand,
-  handleFaceVerified,
-  closeFaceVerification,
-} = useCommandPanel()
-
-const sidebarOpen = ref(false)
-
-// pageTitle mapping
-const titleMap: Record<string, string> = {
-  '/dashboard': 'Panel de Control',
-  '/admin/profiles': 'Perfiles Biométricos',
-}
-const pageTitle = computed(() => titleMap[route.path] || 'SOA Monitor')
-
-const toggleSidebar = () => (sidebarOpen.value = !sidebarOpen.value)
-const closeSidebar = () => (sidebarOpen.value = false)
-
-// expose
-defineExpose({ openCommandPanel })
-</script>
-
-<style scoped>
-</style> 
+</template> 
