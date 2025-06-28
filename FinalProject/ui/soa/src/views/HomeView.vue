@@ -80,7 +80,7 @@ const raspberryId = ref('raspi-1')
 const faceVerificationToken = ref(null)
 
 const API_BASE =
-  'localhost1' === 'localhost' ? 'http://localhost:5002' : 'https://lpn2.crabdance.com/mqtt'
+  'localhost1' === 'localhost' ? 'http://localhost:5173' : 'https://lpn2.crabdance.com/mqtt'
 
 async function startRecognition() {
   error.value = ''

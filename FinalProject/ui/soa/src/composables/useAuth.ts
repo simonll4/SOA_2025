@@ -1,5 +1,5 @@
 import Keycloak from 'keycloak-js'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 
@@ -7,13 +7,19 @@ const keycloak = new Keycloak({
   url: 'https://keycloak.lpn1.crabdance.com/',
   realm: 'SOA-2025',
   clientId: 'vue-app',
+  // @ts-expect-error Propiedad personalizada admitida por wrapper JS
+  redirectUri: window.location.origin + '/',
 })
 
 const initialized = ref(false)
 
 export function useAuth() {
   const store = useAuthStore()
-const { isAuthenticated, userInfo, token } = storeToRefs(store)
+  const { isAuthenticated, userInfo, token } = storeToRefs(store)
+
+  // Computed roles helpers
+  const isAdmin = computed(() => userInfo.value?.roles?.includes('ADMIN_ROLE') || false)
+  const isOperator = computed(() => userInfo.value?.roles?.includes('USER_ROLE') || false)
 
   const initKeycloak = async () => {
     if (initialized.value) return
@@ -33,6 +39,7 @@ const { isAuthenticated, userInfo, token } = storeToRefs(store)
           email: parsedToken?.email,
           //roles: parsedToken?.realm_access?.roles || [],
           roles: parsedToken?.resource_access?.['vue-app']?.roles || [],
+          name: parsedToken?.name,
         }
 
         store.setAuth(token, userInfo)
@@ -74,6 +81,8 @@ const { isAuthenticated, userInfo, token } = storeToRefs(store)
     logout,
     isAuthenticated,
     userInfo,
-    token
+    token,
+    isAdmin,
+    isOperator
   }
 }
