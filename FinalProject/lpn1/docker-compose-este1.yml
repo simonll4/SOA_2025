@@ -185,6 +185,49 @@ services:
     networks:
       - internal
 
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:latest
+    container_name: oauth2-proxy
+    restart: always
+    environment:
+      OAUTH2_PROXY_PROVIDER: keycloak-oidc
+      OAUTH2_PROXY_CLIENT_ID: influx
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
+      OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+      OAUTH2_PROXY_UPSTREAMS: "http://influxdb2:8086"
+      OAUTH2_PROXY_REDIRECT_URL: "https://influxdb.lpn1.crabdance.com/oauth2/callback"
+      OAUTH2_PROXY_OIDC_ISSUER_URL: "https://keycloak.lpn1.crabdance.com/realms/SOA-2025"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_HTTP_ADDRESS: "0.0.0.0:4180"
+      OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL: "true"
+      OAUTH2_PROXY_WHITELIST_DOMAINS: "lpn1.crabdance.com,influxdb.lpn1.crabdance.com"
+      OAUTH2_PROXY_COOKIE_DOMAIN: "lpn1.crabdance.com"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_PASS_HOST_HEADER: "true"
+      OAUTH2_PROXY_SET_AUTHORIZATION_HEADER: "true"
+      OAUTH2_PROXY_COOKIE_SECURE: "true"
+      OAUTH2_PROXY_COOKIE_HTTPONLY: "true"
+      OAUTH2_PROXY_COOKIE_REFRESH: "1h"
+      OAUTH2_PROXY_OIDC_SCOPES: "openid email profile"
+      OAUTH2_PROXY_ALLOWED_REDIRECT_DOMAINS: "influxdb.lpn1.crabdance.com"
+      OAUTH2_PROXY_OIDC_EXTRA_SCOPES: "groups"
+      OAUTH2_PROXY_OIDC_GROUPS_CLAIM: "groups"
+      OAUTH2_PROXY_ALLOWED_GROUPS: "admin"
+      # AGREGADO: Estas configuraciones ayudan con la autenticación
+      OAUTH2_PROXY_PASS_ACCESS_TOKEN: "true"
+      OAUTH2_PROXY_PASS_USER_HEADERS: "true"
+      OAUTH2_PROXY_SET_BASIC_AUTH: "false"
+      OAUTH2_PROXY_SKIP_AUTH_REGEX: "^/health.*"
+    expose:
+      - "4180"
+    depends_on:
+      - keycloak
+    extra_hosts:
+      - "keycloak.lpn1.crabdance.com:143.0.100.213"
+    networks:
+      - internal
+
 volumes:
   certbot-conf:
   certbot-www:
