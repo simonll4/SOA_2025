@@ -1,23 +1,16 @@
-import Keycloak from 'keycloak-js'
-import { onMounted, ref, computed } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 
-const keycloak = new Keycloak({
-  url: 'https://keycloak.lpn1.crabdance.com/',
-  realm: 'SOA-2025',
-  clientId: 'vue-app',
-  // @ts-expect-error Propiedad personalizada admitida por wrapper JS
-  redirectUri: window.location.origin + '/',
-})
+import { useAuthStore } from '@/stores/auth'
+import { getKeycloakInstance } from '@/services/keycloak/keycloak'
 
 const initialized = ref(false)
 
-export function useAuth() {
+export function useKeycloakAuth() {
+  const keycloak = getKeycloakInstance()
   const store = useAuthStore()
   const { isAuthenticated, userInfo, token } = storeToRefs(store)
 
-  // Computed roles helpers
   const isAdmin = computed(() => userInfo.value?.roles?.includes('ADMIN_ROLE') || false)
   const isOperator = computed(() => userInfo.value?.roles?.includes('USER_ROLE') || false)
 
@@ -30,22 +23,20 @@ export function useAuth() {
         checkLoginIframe: false,
       })
 
-      if (authenticated) {
-        const token = keycloak.token!
+      if (authenticated && keycloak.token) {
         const parsedToken: any = keycloak.tokenParsed
 
         const userInfo = {
           username: parsedToken?.preferred_username,
           email: parsedToken?.email,
-          //roles: parsedToken?.realm_access?.roles || [],
           roles: parsedToken?.resource_access?.['vue-app']?.roles || [],
           name: parsedToken?.name,
         }
 
-        store.setAuth(token, userInfo)
+        store.setAuth(keycloak.token, userInfo)
         initialized.value = true
 
-        // Token refresh automático
+        // Refrescar el token periódicamente
         setInterval(async () => {
           try {
             const refreshed = await keycloak.updateToken(60)
@@ -59,7 +50,6 @@ export function useAuth() {
       } else {
         store.clearAuth()
       }
-
     } catch (err) {
       console.error('Fallo la autenticación:', err)
       store.clearAuth()
@@ -71,10 +61,6 @@ export function useAuth() {
     store.clearAuth()
   }
 
-  onMounted(() => {
-    initKeycloak()
-  })
-
   return {
     keycloak,
     initKeycloak,
@@ -83,6 +69,6 @@ export function useAuth() {
     userInfo,
     token,
     isAdmin,
-    isOperator
+    isOperator,
   }
 }

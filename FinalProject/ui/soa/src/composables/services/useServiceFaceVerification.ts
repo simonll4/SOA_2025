@@ -1,12 +1,11 @@
 import { ref, nextTick } from 'vue'
-import axios from 'axios'
-import { useAuth } from './useAuth'
-import { useCommands } from './useCommands'
-import { useNotifications } from './useNotifications'
+
+import { useServiceCommands } from './useServiceCommands'
+import { useNotifications } from '../useNotifications'
+import { recognizeFace } from '@/services/faceRecognitionService'
 
 export function useFaceVerification() {
-  const { token } = useAuth()
-  const { setFaceVerificationToken } = useCommands()
+  const { setFaceVerificationToken } = useServiceCommands()
   const { addNotification } = useNotifications()
 
   const video = ref<HTMLVideoElement | null>(null)
@@ -18,7 +17,7 @@ export function useFaceVerification() {
   const maxAttempts = 5
   const recognitionInterval = ref<number | null>(null)
   const stream = ref<MediaStream | null>(null)
-  const faceStatus = ref('searching')
+  const faceStatus = ref<'searching' | 'found' | 'error' | 'none'>('searching')
 
   const startRecognition = async () => {
     error.value = ''
@@ -55,10 +54,9 @@ export function useFaceVerification() {
   }
 
   const stopRecognition = () => {
-    if (stream.value) {
-      stream.value.getTracks().forEach((track) => track.stop())
-      stream.value = null
-    }
+    stream.value?.getTracks().forEach((track) => track.stop())
+    stream.value = null
+
     if (recognitionInterval.value) {
       clearInterval(recognitionInterval.value)
       recognitionInterval.value = null
@@ -82,21 +80,18 @@ export function useFaceVerification() {
       canvas.height = video.value.videoHeight
       const ctx = canvas.getContext('2d')
       if (!ctx) throw new Error('No se pudo obtener el contexto del canvas')
-      
+
       ctx.drawImage(video.value, 0, 0, canvas.width, canvas.height)
 
-      const blob = await new Promise<Blob>((resolve) => canvas.toBlob(resolve as BlobCallback, 'image/jpeg', 0.8))
+      const blob = await new Promise<Blob>((resolve) =>
+        canvas.toBlob(resolve as BlobCallback, 'image/jpeg', 0.8),
+      )
       if (!blob) throw new Error('No se pudo crear la imagen')
 
       const formData = new FormData()
       formData.append('file', blob, 'capture.jpg')
-      
-      const response = await axios.post('https://lpn3.crabdance.com/api/face/recognize', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token.value}`,
-        },
-      })
+
+      const response = await recognizeFace(formData)
 
       result.value = {
         ...response.data.data,
@@ -104,15 +99,13 @@ export function useFaceVerification() {
         message: response.data.message,
       }
 
-      // Guardar el FVT si existe
       if (response.data.data?.face_verification_token) {
         const fvt = response.data.data.face_verification_token
         setFaceVerificationToken(fvt)
-        console.log('FVT guardado:', fvt)
         addNotification({
           type: 'success',
           title: 'Verificación exitosa',
-          message: 'Rostro verificado correctamente. Comandos críticos habilitados.'
+          message: 'Rostro verificado correctamente. Comandos críticos habilitados.',
         })
       }
 
@@ -145,4 +138,4 @@ export function useFaceVerification() {
     startRecognition,
     stopRecognition,
   }
-} 
+}

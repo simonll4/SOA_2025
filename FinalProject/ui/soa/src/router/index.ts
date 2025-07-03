@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
 
-// Vistas y layouts
+import { useKeycloakAuth } from '@/composables/keycloak/useKeycloakAuth'
+
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import DashboardHome from '@/views/DashboardHome.vue'
 import MonitoringView from '@/views/MonitoringView.vue'
-import AdminProfilesView from '@/views/AdminProfilesView.vue' // todavía placeholder opcional
+import AdminProfilesView from '@/views/AdminProfilesView.vue'
 import UnauthorizedView from '@/views/UnauthorizedView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 
@@ -58,7 +58,7 @@ const router = createRouter({
 
 // Navigation Guards
 router.beforeEach(async (to, from, next) => {
-  const { isAuthenticated, isAdmin, initKeycloak } = useAuth()
+  const { isAuthenticated, isAdmin, initKeycloak } = useKeycloakAuth()
 
   if (!isAuthenticated.value) {
     try {
