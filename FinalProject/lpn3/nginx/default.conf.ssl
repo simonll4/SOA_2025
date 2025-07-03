@@ -16,6 +16,11 @@ server {
     }
 }
 
+map $arg_auth_token $grafana_token {
+    default $arg_auth_token;
+    ""      "";
+}
+
 server {
     listen 443 ssl;
     server_name lpn3.crabdance.com;
@@ -46,14 +51,13 @@ server {
         proxy_set_header Host $host;
     }
 
-
     location /adminer {
         proxy_pass http://adminer:8080/;
     }
 
     # Face Profile Service (API)
     location /api/profile/ {
-        proxy_pass http://face_profile_service:5001/;  # Usa el puerto EXPOSE del compose
+        proxy_pass http://face_profile_service:5001/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -62,7 +66,7 @@ server {
 
      # Face Recognition Service (API)
     location /api/face/ {
-        proxy_pass http://face_recognition_service:5000/;  # Usa el puerto EXPOSE del compose
+        proxy_pass http://face_recognition_service:5000/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
