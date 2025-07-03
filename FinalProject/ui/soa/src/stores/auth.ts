@@ -1,26 +1,35 @@
-// stores/auth.ts
 import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
-export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    isAuthenticated: false,
-    token: null as string | null,
-    userInfo: null as {
-      username: string
-      email?: string
-      roles: string[]
-    } | null,
-  }),
-  actions: {
-    setAuth(token: string, userInfo: any) {
-      this.token = token
-      this.userInfo = userInfo
-      this.isAuthenticated = true
-    },
-    clearAuth() {
-      this.token = null
-      this.userInfo = null
-      this.isAuthenticated = false
-    },
-  },
+interface UserInfo {
+  username: string
+  name: string
+  email?: string
+  roles: string[]
+}
+
+export const useAuthStore = defineStore('auth', () => {
+  const isAuthenticated = ref(false)
+  const token = ref<string | null>(null)
+  const userInfo = ref<UserInfo | null>(null)
+
+  function setAuth(newToken: string, newUserInfo: UserInfo) {
+    token.value = newToken
+    userInfo.value = newUserInfo
+    isAuthenticated.value = true
+  }
+
+  function clearAuth() {
+    token.value = null
+    userInfo.value = null
+    isAuthenticated.value = false
+  }
+
+  return {
+    isAuthenticated,
+    token,
+    userInfo,
+    setAuth,
+    clearAuth,
+  }
 })

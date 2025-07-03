@@ -1,56 +1,57 @@
-import { ref, computed } from 'vue'
-import { useUsersStore, type KeycloakUser } from '@/stores/users'
-import { useAuth } from '@/composables/useAuth'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+
+import { useUsersStore, type KeycloakUser } from '@/stores/users'
+import { getKeycloakInstance } from '@/services/keycloak/keycloak'
+import { useAuthStore } from '@/stores/auth'
 
 export function useKeycloakUsers() {
   const store = useUsersStore()
   const { users, loading, error } = storeToRefs(store)
-  const { keycloak, token, isAdmin } = useAuth()
 
-  // Computed para el select
+  const authStore = useAuthStore()
+  const { token, userInfo } = storeToRefs(authStore)
+  const keycloak = getKeycloakInstance()
+
+  const isAdmin = computed(() => userInfo.value?.roles?.includes('ADMIN_ROLE') || false)
+
   const usersForSelect = computed(() => store.getUsersForSelect)
   const enabledUsers = computed(() => store.enabledUsers)
 
-  // Función para obtener usuarios usando la API de administración de Keycloak
   const fetchUsers = async (force = false) => {
     if (!isAdmin.value) {
       store.setError('No tienes permisos para ver los usuarios')
       return
     }
 
-    if (!force && !store.shouldRefresh()) {
-      return // Ya tenemos datos recientes
-    }
+    if (!force && !store.shouldRefresh()) return
 
     store.setLoading(true)
     store.setError(null)
 
     try {
-      // Usar la API de administración de Keycloak
-      const keycloakUrl = keycloak.authServerUrl || 'https://keycloak.lpn1.crabdance.com'
+      const keycloakUrl = keycloak.authServerUrl
       const response = await fetch(
         `${keycloakUrl}/admin/realms/${keycloak.realm}/users?briefRepresentation=false&max=1000`,
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token.value}`,
+            Authorization: `Bearer ${token.value}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
 
       if (!response.ok) {
-        if (response.status === 403) {
-          throw new Error('No tienes permisos para acceder a los usuarios de Keycloak')
-        }
-        throw new Error(`Error HTTP: ${response.status}`)
+        const errorMsg =
+          response.status === 403
+            ? 'No tienes permisos para acceder a los usuarios de Keycloak'
+            : `Error HTTP: ${response.status}`
+        throw new Error(errorMsg)
       }
 
       const userData: any[] = await response.json()
-      
-      // Mapear los datos de Keycloak a nuestro formato
-      const mappedUsers: KeycloakUser[] = userData.map(user => ({
+      const mappedUsers: KeycloakUser[] = userData.map((user) => ({
         id: user.id,
         username: user.username,
         firstName: user.firstName,
@@ -62,7 +63,6 @@ export function useKeycloakUsers() {
       }))
 
       store.setUsers(mappedUsers)
-      
     } catch (err: any) {
       console.error('Error al obtener usuarios de Keycloak:', err)
       store.setError(err.message || 'Error al obtener usuarios')
@@ -71,41 +71,31 @@ export function useKeycloakUsers() {
     }
   }
 
-  // Función para obtener un usuario específico por ID
-  const getUserById = (id: string) => {
-    return store.getUserById(id)
-  }
+  const getUserById = (id: string) => store.getUserById(id)
+  const refreshUsers = () => fetchUsers(true)
 
-  // Función para refrescar usuarios
-  const refreshUsers = () => {
-    return fetchUsers(true)
-  }
-
-  // Función para buscar usuarios (filtro local)
   const searchUsers = (query: string) => {
     if (!query.trim()) return users.value
 
     const searchTerm = query.toLowerCase()
-    return users.value.filter(user => 
-      user.username.toLowerCase().includes(searchTerm) ||
-      user.firstName?.toLowerCase().includes(searchTerm) ||
-      user.lastName?.toLowerCase().includes(searchTerm) ||
-      user.email?.toLowerCase().includes(searchTerm)
+    return users.value.filter(
+      (user) =>
+        user.username.toLowerCase().includes(searchTerm) ||
+        user.firstName?.toLowerCase().includes(searchTerm) ||
+        user.lastName?.toLowerCase().includes(searchTerm) ||
+        user.email?.toLowerCase().includes(searchTerm),
     )
   }
 
   return {
-    // State
     users,
     loading,
     error,
     usersForSelect,
     enabledUsers,
-    
-    // Actions
     fetchUsers,
     refreshUsers,
     getUserById,
     searchUsers,
   }
-} 
+}

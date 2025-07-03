@@ -1,7 +1,8 @@
 import { ref } from 'vue'
-import axios from 'axios'
-import { useAuth } from './useAuth'
-import { useNotifications } from './useNotifications'
+import { useRoute } from 'vue-router'
+
+import { useNotifications } from '../useNotifications'
+import { sendCommand, sendCriticalCommand } from '@/services/commandMqttService'
 
 interface CommandHistoryItem {
   command: string
@@ -13,49 +14,42 @@ const isExecuting = ref(false)
 const commandHistory = ref<CommandHistoryItem[]>([])
 const faceVerificationToken = ref<string | null>(null)
 
-export function useCommands() {
-  const { token } = useAuth()
+export function useServiceCommands() {
+  const route = useRoute()
+  const raspberryId = route.params.id as string
   const { addNotification } = useNotifications()
 
-  // API base URL - usando la misma lógica que en HomeView.vue
-  const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5002' : 'https://lpn2.crabdance.com/mqtt'
-
-  const executeCommand = async (topic: string, message = '', raspberryId = 'raspi-1') => {
+  const executeCommand = async (topic: string, message = '', id = raspberryId) => {
     if (isExecuting.value) return
-
     isExecuting.value = true
 
-    try {
-      const payload = {
-        raspberry: raspberryId,
-        topic,
-        message,
-      }
+    const payload = {
+      raspberry: id,
+      topic,
+      message,
+    }
 
-      const response = await axios.post(`${API_BASE}/command`, payload, {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-        },
-      })
+    try {
+      const response = await sendCommand(payload)
 
       commandHistory.value.push({
-        command: `${raspberryId}${topic} ${message}`.trim(),
+        command: `${id}${topic} ${message}`.trim(),
         status: 'success',
         timestamp: new Date(),
       })
 
-      addNotification({ 
-        type: 'success', 
-        title: 'Comando ejecutado', 
-        message: `Comando publicado correctamente en ${payload.raspberry}${topic}` 
+      addNotification({
+        type: 'success',
+        title: 'Comando ejecutado',
+        message: `Comando publicado correctamente en ${payload.raspberry}${topic}`,
       })
-      
+
       return { success: true, data: response.data }
     } catch (error: any) {
-      console.error('Error executing command:', error)
+      console.error('Error ejecutando comando:', error)
 
       commandHistory.value.push({
-        command: `${raspberryId}${topic} ${message}`.trim(),
+        command: `${id}${topic} ${message}`.trim(),
         status: 'error',
         timestamp: new Date(),
       })
@@ -68,7 +62,7 @@ export function useCommands() {
     }
   }
 
-  const executeCriticalCommand = async (topic: string, raspberryId = 'raspi-1') => {
+  const executeCriticalCommand = async (topic: string, id = raspberryId) => {
     if (isExecuting.value) return
 
     if (!faceVerificationToken.value) {
@@ -79,37 +73,33 @@ export function useCommands() {
 
     isExecuting.value = true
 
-    try {
-      const payload = {
-        raspberry: raspberryId,
-        topic,
-      }
+    const payload = {
+      raspberry: id,
+      topic,
+      message: '',
+    }
 
-      const response = await axios.post(`${API_BASE}/command/critic`, payload, {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-          'X-Face-Verification': faceVerificationToken.value,
-        },
-      })
+    try {
+      const response = await sendCriticalCommand(payload, faceVerificationToken.value)
 
       commandHistory.value.push({
-        command: `${raspberryId}${topic} (crítico)`,
+        command: `${id}${topic} (crítico)`,
         status: 'success',
         timestamp: new Date(),
       })
 
-      addNotification({ 
-        type: 'success', 
-        title: 'Comando crítico ejecutado', 
-        message: `Comando crítico publicado correctamente en ${payload.raspberry}${topic}` 
+      addNotification({
+        type: 'success',
+        title: 'Comando crítico ejecutado',
+        message: `Comando crítico publicado correctamente en ${payload.raspberry}${topic}`,
       })
-      
+
       return { success: true, data: response.data }
     } catch (error: any) {
-      console.error('Error executing critical command:', error)
+      console.error('Error ejecutando comando crítico:', error)
 
       commandHistory.value.push({
-        command: `${raspberryId}${topic} (crítico)`,
+        command: `${id}${topic} (crítico)`,
         status: 'error',
         timestamp: new Date(),
       })
@@ -124,7 +114,6 @@ export function useCommands() {
 
   const setFaceVerificationToken = (token: string | null) => {
     faceVerificationToken.value = token
-    console.log('FVT actualizado:', token)
   }
 
   const clearHistory = () => {
@@ -140,4 +129,4 @@ export function useCommands() {
     setFaceVerificationToken,
     clearHistory,
   }
-} 
+}
