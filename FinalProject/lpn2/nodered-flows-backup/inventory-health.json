@@ -1,0 +1,236 @@
+[
+    {
+        "id": "62b838fe5bc15d76",
+        "type": "inject",
+        "z": "75f0810962aae848",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 120,
+        "wires": [
+            [
+                "98682a929aac848d"
+            ]
+        ]
+    },
+    {
+        "id": "98682a929aac848d",
+        "type": "file in",
+        "z": "75f0810962aae848",
+        "name": "",
+        "filename": "/data/inventory.json",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 330,
+        "y": 120,
+        "wires": [
+            [
+                "ce5040466c8f3fed"
+            ]
+        ]
+    },
+    {
+        "id": "ce5040466c8f3fed",
+        "type": "json",
+        "z": "75f0810962aae848",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 530,
+        "y": 120,
+        "wires": [
+            [
+                "c41bf1d163c46865"
+            ]
+        ]
+    },
+    {
+        "id": "c41bf1d163c46865",
+        "type": "change",
+        "z": "75f0810962aae848",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "inventory",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 750,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7f7b32666d281686",
+        "type": "watch",
+        "z": "75f0810962aae848",
+        "name": "",
+        "files": "/data/inventory.json",
+        "recursive": "",
+        "x": 130,
+        "y": 60,
+        "wires": [
+            [
+                "98682a929aac848d"
+            ]
+        ]
+    },
+    {
+        "id": "857a1e869fbd32f3",
+        "type": "inject",
+        "z": "75f0810962aae848",
+        "name": "⏱️ disparo cada 5 s",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "3",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "10",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 240,
+        "wires": [
+            [
+                "fbefd479edec97a9"
+            ]
+        ]
+    },
+    {
+        "id": "fbefd479edec97a9",
+        "type": "function",
+        "z": "75f0810962aae848",
+        "name": "get inventory",
+        "func": "// Lee el inventario global { nombre: ip }\nconst inv = global.get(\"inventory\") || {};\nmsg.raspberries = Object.entries(inv).map(([name, ip]) => ({ name, ip }));\nmsg.index   = 0;\nmsg.results = {};\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 240,
+        "wires": [
+            [
+                "fab3299781662a3a"
+            ]
+        ]
+    },
+    {
+        "id": "fab3299781662a3a",
+        "type": "function",
+        "z": "75f0810962aae848",
+        "name": "iterador",
+        "func": "const list = msg.raspberries;\nconst i = msg.index;\nif (i >= list.length) {\n    msg.payload = {\n        results: msg.results,\n        timestamp: new Date().toISOString()  // Timestamp cuando terminamos\n    };\n    return [null, msg];  // Este va al WS (segunda salida)\n}\n\nmsg.raspberry = list[i];\nmsg.index = i + 1;\nmsg.timeout = 3000;\n// Agregamos timestamp para el mensaje de iteración\nmsg.timestamp = new Date().toISOString();\nreturn [msg, null];  // Este va a la siguiente iteración (primera salida)",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 540,
+        "y": 240,
+        "wires": [
+            [
+                "4c2e37c1a753cd63"
+            ],
+            [
+                "1b305139b9bd0068"
+            ]
+        ]
+    },
+    {
+        "id": "4c2e37c1a753cd63",
+        "type": "function",
+        "z": "75f0810962aae848",
+        "name": "fetch health",
+        "func": "// ——— obtener fetch desde el contexto global ———\nconst fetch = global.get('fetch');\nif (typeof fetch !== 'function') {\n    node.error('fetch no está disponible en functionGlobalContext');\n    return null;\n}\n\nconst { raspberry, timeout = 3000 } = msg;\nconst url = `http://${raspberry.ip}:1880/health`;\n\n// función auxiliar que ejecuta la petición\nasync function doFetch() {\n    try {\n        const res = await fetch(url);\n        msg.statusCode = res.status;\n        msg.payload = await res.text();\n    } catch (err) {\n        msg.error = err.message;\n    }\n}\n\n\nPromise.race([\n    doFetch()\n\n])\n.catch(err => { msg.error = err.message; })\n.finally(() => {\n    node.send(msg);\n    node.done();\n});\n\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 240,
+        "wires": [
+            [
+                "1729294153dc938e"
+            ]
+        ]
+    },
+    {
+        "id": "1729294153dc938e",
+        "type": "function",
+        "z": "75f0810962aae848",
+        "name": "response",
+        "func": "const { raspberry, results } = msg;\nif (msg.error || msg.statusCode !== 200) {\n    results[raspberry.name] = \"offline\";\n} else {\n    try {\n        const body = JSON.parse(msg.payload);\n        results[raspberry.name] = body.status || \"unknown\";\n    } catch {\n        results[raspberry.name] = \"invalid_response\";\n    }\n}\nmsg.results = results;\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 240,
+        "wires": [
+            [
+                "fab3299781662a3a"
+            ]
+        ]
+    },
+    {
+        "id": "1b305139b9bd0068",
+        "type": "websocket out",
+        "z": "75f0810962aae848",
+        "name": "publica estado",
+        "server": "93b075ad44d313d5",
+        "client": "",
+        "x": 750,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "93b075ad44d313d5",
+        "type": "websocket-listener",
+        "path": "/raspberries/status",
+        "wholemsg": "false"
+    }
+]
