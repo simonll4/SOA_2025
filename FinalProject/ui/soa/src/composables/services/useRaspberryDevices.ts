@@ -22,6 +22,7 @@ export default function useRaspberryStatus() {
     socket.value.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
+        console.log('data', data)
         if (data.results && typeof data.results === 'object') {
           Object.entries(data.results).forEach(([id, rawStatus]) => {
             let status: 'healthy' | 'unhealthy' | 'offline'

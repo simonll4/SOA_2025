@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Check</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 50px;
+        background-color: #f0f0f0;
+      }
+      .status {
+        background-color: #4caf50;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        display: inline-block;
+      }
+      .timestamp {
+        margin-top: 20px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status">
+      <h1>✅ Application Status: HEALTHY</h1>
+      <p>The Vue.js application is running successfully.</p>
+    </div>
+    <div class="timestamp">
+      <p>Last checked: <span id="timestamp"></span></p>
+    </div>
+
+    <script>
+      document.getElementById('timestamp').textContent = new Date().toLocaleString()
+    </script>
+  </body>
+</html>
