@@ -7,6 +7,9 @@ import useRaspberryStatus from '@/composables/services/useRaspberryDevices'
 
 const { devices, onlineDevices, offlineDevices } = useRaspberryStatus()
 const { userInfo, isAdmin } = useKeycloakAuth()
+
+
+// TODO agregar skeleton cuando cargan las raspberry
 </script>
 
 <template>
@@ -118,7 +121,7 @@ const { userInfo, isAdmin } = useKeycloakAuth()
                 <span
                   :class="[
                     'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                    device.status === 'healthy'
+                    device.status === 'online'
                       ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                       : device.status === 'unhealthy'
                         ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'

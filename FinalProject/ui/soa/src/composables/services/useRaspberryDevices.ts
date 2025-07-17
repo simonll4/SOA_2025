@@ -22,12 +22,12 @@ export default function useRaspberryStatus() {
     socket.value.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
-        console.log('data', data)
+       // console.log('data', data)
         if (data.results && typeof data.results === 'object') {
           Object.entries(data.results).forEach(([id, rawStatus]) => {
-            let status: 'healthy' | 'unhealthy' | 'offline'
-            if (rawStatus === 'online') status = 'healthy'
-            else if (rawStatus === 'warning') status = 'unhealthy'
+            let status: 'online' | 'unhealthy' | 'offline'
+            if (rawStatus === 'healthy') status = 'online'
+            else if (rawStatus === 'unhealthy') status = 'unhealthy'
             else status = 'offline'
 
             raspberryStore.upsertDeviceStatus(id, status, data.timestamp || new Date())
@@ -61,7 +61,7 @@ export default function useRaspberryStatus() {
   })
 
   const devices = computed(() => raspberryStore.devices)
-  const onlineDevices = computed(() => devices.value.filter((d) => d.status === 'healthy'))
+  const onlineDevices = computed(() => devices.value.filter((d) => d.status === 'online'))
   const offlineDevices = computed(() => devices.value.filter((d) => d.status === 'offline'))
 
   return {

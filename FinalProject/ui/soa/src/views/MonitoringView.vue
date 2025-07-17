@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 import GrafanaDashboard from '@/components/GrafanaDashboard.vue'
@@ -35,7 +35,7 @@ const closeCommandPanel = () => (showCommandPanel.value = false)
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <button
-            @click="$router.go(-1)"
+            @click="$router.push('/')"
             class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,11 +62,11 @@ const closeCommandPanel = () => (showCommandPanel.value = false)
             <span
               :class="[
                 'w-2 h-2 rounded-full',
-                deviceInfo?.status === 'healthy' ? 'bg-green-400' : 'bg-red-400',
+                deviceInfo?.status === 'online' ? 'bg-green-400' : 'bg-red-400',
               ]"
             ></span>
             <span class="leading-4 font-medium text-gray-600 dark:text-gray-300">{{
-              deviceInfo?.status === 'healthy' ? 'En línea' : 'Desconectado'
+              deviceInfo?.status === 'online' ? 'En línea' : 'Desconectado'
             }}</span>
           </div>
           <button

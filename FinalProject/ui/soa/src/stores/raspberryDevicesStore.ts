@@ -6,7 +6,7 @@ export interface RaspberryDevice {
   name: string
   location: string
   ipAddress: string
-  status: 'healthy' | 'unhealthy' | 'offline'
+  status: 'online' | 'unhealthy' | 'offline'
   lastConnection: Date
 }
 
@@ -15,7 +15,7 @@ export const useRaspberryDevicesStore = defineStore('raspberryDevices', () => {
 
   function upsertDeviceStatus(
     id: string,
-    status: 'healthy' | 'unhealthy' | 'offline',
+    status: 'online' | 'unhealthy' | 'offline',
     timestamp: string | Date,
   ) {
     const index = devices.value.findIndex((d) => d.id === id)

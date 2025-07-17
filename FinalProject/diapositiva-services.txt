@@ -1,0 +1,45 @@
+SERVICIOS PRINCIPALES - ARQUITECTURA SOA
+
+--------------------------------------------------
+
+1. face_profile_service
+   - Procesa imágenes de rostros para crear y almacenar embeddings faciales (vectores).
+   - Utiliza Flask, PostgreSQL (pgvector) y autenticación con Keycloak.
+
+2. face_recognition_service
+   - Realiza reconocimiento facial en tiempo real.
+   - Expone una API REST para comparar imágenes y verificar identidades.
+   - Utiliza Flask, dlib, face_recognition y PostgreSQL (pgvector).
+   - Integración con Keycloak para autenticación.
+
+3. keycloak_sync_service
+   - Sincroniza usuarios y roles desde Keycloak a una base de datos local.
+   - Permite mantener actualizada la información de usuarios para otros servicios.
+   - Implementado en Python, usa SQLAlchemy y PostgreSQL.
+   - Scheduler interno para sincronización periódica.
+
+4. mqtt_proxy_service
+   - Proxy seguro para comandos MQTT entre frontend y dispositivos.
+   - Valida y enruta mensajes MQTT autenticados.
+   - Implementado en Flask y paho-mqtt.
+   - Integración con Keycloak para control de acceso.
+
+--------------------------------------------------
+
+1. face_profile_service (API-REST)
+    - Procesa imágenes de rostros para crear y almacenar embeddings faciales (vectores).
+    - Integración con Keycloak para autenticación y autorizacion.
+
+2. face_recognition_service (API-REST)
+   - Realiza reconocimiento facial en tiempo real.
+   - Genera un token FVT para la verificación de identidad.
+   - Integración con Keycloak para autenticación y autorizacion.
+
+3. keycloak_sync_service
+   - Sincroniza informacion de usuarios desde Keycloak a una base de datos local.
+   - Scheduler interno para sincronización periódica.
+
+4. mqtt_proxy_service (API-REST)
+   - Proxy seguro para comandos MQTT entre frontend y dispositivos.
+   - Utiliza el token FVT generado por face_recognition_service.
+   - Integración con Keycloak para autenticación y autorizacion.
