@@ -102,11 +102,11 @@ export function useFaceVerification() {
       if (response.data.data?.face_verification_token) {
         const fvt = response.data.data.face_verification_token
         setFaceVerificationToken(fvt)
-        addNotification({
+/*         addNotification({
           type: 'success',
           title: 'Verificación exitosa',
           message: 'Rostro verificado correctamente. Comandos críticos habilitados.',
-        })
+        }) */
       }
 
       if (response.data.status === 'success') {

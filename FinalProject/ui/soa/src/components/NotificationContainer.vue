@@ -4,7 +4,7 @@ import { useNotifications } from '@/composables/useNotifications'
 const { notifications, removeNotification } = useNotifications()
 </script>
 <template>
-  <div class="fixed top-4 right-4 z-50 space-y-3 max-w-md">
+  <div class="fixed top-4 left-4 z-50 space-y-3 max-w-md">
     <transition-group name="notification" tag="div" class="space-y-3">
       <div
         v-for="notification in notifications"
@@ -149,12 +149,12 @@ const { notifications, removeNotification } = useNotifications()
 
 .notification-enter-from {
   opacity: 0;
-  transform: translateX(100%) scale(0.9);
+  transform: translateX(-100%) scale(0.9);
 }
 
 .notification-leave-to {
   opacity: 0;
-  transform: translateX(100%) scale(0.9);
+  transform: translateX(-100%) scale(0.9);
 }
 
 .notification-move {
@@ -176,10 +176,10 @@ const { notifications, removeNotification } = useNotifications()
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-  .fixed.top-4.right-4 {
+  .fixed.top-4.left-4 {
     top: 1rem;
-    right: 1rem;
     left: 1rem;
+    right: 1rem;
     max-width: none;
   }
 }

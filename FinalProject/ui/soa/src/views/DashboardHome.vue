@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import StatCard from '@/components/StatCard.vue'
+import StatCardSkeleton from '@/components/StatCardSkeleton.vue'
+import DevicesTableSkeleton from '@/components/DevicesTableSkeleton.vue'
 import { RouterLink } from 'vue-router'
+import { onMounted } from 'vue'
 
 import { useKeycloakAuth } from '@/composables/keycloak/useKeycloakAuth'
 import useRaspberryStatus from '@/composables/services/useRaspberryDevices'
 
-const { devices, onlineDevices, offlineDevices } = useRaspberryStatus()
+const { devices, onlineDevices, offlineDevices, loading, connectWebSocket } = useRaspberryStatus()
 const { userInfo, isAdmin } = useKeycloakAuth()
 
-
-// TODO agregar skeleton cuando cargan las raspberry
+onMounted(() => {
+  connectWebSocket()
+})
 </script>
 
 <template>
@@ -46,35 +50,38 @@ const { userInfo, isAdmin } = useKeycloakAuth()
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-      <StatCard
-        title="Dispositivos Activos"
-        :value="onlineDevices.length"
-        icon-bg="bg-green-500"
-        icon-path="M5 13l4 4L19 7"
-      />
-      <StatCard
-        title="Dispositivos Offline"
-        :value="offlineDevices.length"
-        icon-bg="bg-red-500"
-        icon-path="M6 18L18 6M6 6l12 12"
-      />
-      <!-- <StatCard
-        title="Comandos Ejecutados"
-        :value="commandHistory.length"
-        icon-bg="bg-blue-500"
-        icon-path="M13 10V3L4 14h7v7l9-11h-7z"
-      /> -->
-      <StatCard
-        title="Total Dispositivos"
-        :value="devices.length"
-        icon-bg="bg-purple-500"
-        icon-path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
+    <div class="grid gap-5 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+      <template v-if="loading">
+        <StatCardSkeleton v-for="i in 3" :key="i" class="w-full" />
+      </template>
+      <template v-else>
+        <StatCard
+          class="w-full"
+          title="Dispositivos Activos"
+          :value="onlineDevices.length"
+          icon-bg="bg-green-500"
+          icon-path="M5 13l4 4L19 7"
+        />
+        <StatCard
+          class="w-full"
+          title="Dispositivos Offline"
+          :value="offlineDevices.length"
+          icon-bg="bg-red-500"
+          icon-path="M6 18L18 6M6 6l12 12"
+        />
+        <StatCard
+          class="w-full"
+          title="Total Dispositivos"
+          :value="devices.length"
+          icon-bg="bg-purple-500"
+          icon-path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </template>
     </div>
 
     <!-- Tabla dispositivos -->
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+    <DevicesTableSkeleton v-if="loading" />
+    <div v-else class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 class="text-lg font-medium text-gray-900 dark:text-white">Dispositivos Raspberry Pi</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">

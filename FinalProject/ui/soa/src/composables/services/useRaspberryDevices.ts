@@ -15,7 +15,6 @@ export default function useRaspberryStatus() {
     socket.value = new WebSocket(WS_TOPIC)
 
     socket.value.onopen = () => {
-      loading.value = false
       console.log('WebSocket conectado')
     }
 
@@ -31,6 +30,7 @@ export default function useRaspberryStatus() {
             else status = 'offline'
 
             raspberryStore.upsertDeviceStatus(id, status, data.timestamp || new Date())
+            loading.value = false
           })
         }
       } catch (e) {
