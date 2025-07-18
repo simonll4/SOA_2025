@@ -46,10 +46,12 @@ watch(
   () => result.value,
   (newResult) => {
     if (newResult && newResult.status === 'success') {
-      setTimeout(() => {
+/*       setTimeout(() => {
         emit('verified')
         closeModal()
-      }, 2000) // Wait 2 seconds to show success message
+      }, 2000) // Wait 2 seconds to show success message */
+      emit('verified')
+      closeModal()
     }
   },
 )
@@ -141,12 +143,14 @@ watch(
           <p class="text-green-600 dark:text-green-400 text-sm mt-1">
             {{ result.user_name || result.label }}
           </p>
+          <!--  
           <button
             @click="closeModal"
             class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             Continuar
           </button>
+          -->
         </div>
       </div>
     </div>

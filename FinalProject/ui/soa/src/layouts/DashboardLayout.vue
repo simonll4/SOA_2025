@@ -39,7 +39,6 @@ const closeSidebar = () => (sidebarOpen.value = false)
       :class="[
         'fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-        'lg:translate-x-0',
       ]"
     >
       <div class="flex items-center justify-center h-16 px-4 bg-blue-600 dark:bg-blue-700">
@@ -125,14 +124,14 @@ const closeSidebar = () => (sidebarOpen.value = false)
     </div>
 
     <!-- MAIN -->
-    <div class="lg:pl-64 flex flex-col min-h-screen">
+    <div class="flex flex-col min-h-screen">
       <!-- TOP BAR -->
       <div
         class="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8"
       >
         <button
           @click="toggleSidebar"
-          class="lg:hidden -m-2.5 p-2.5 text-gray-700 dark:text-gray-200"
+          class="-m-2.5 p-2.5 text-gray-700 dark:text-gray-200"
         >
           <svg
             class="h-6 w-6"
@@ -192,10 +191,10 @@ const closeSidebar = () => (sidebarOpen.value = false)
       </main>
     </div>
 
-    <!-- Mobile overlay -->
+    <!-- Overlay -->
     <div
       v-if="sidebarOpen"
-      class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+      class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75"
       @click="closeSidebar"
     ></div>
   </div>

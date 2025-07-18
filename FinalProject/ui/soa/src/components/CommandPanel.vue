@@ -369,7 +369,7 @@ onMounted(() => {
               ref="colorPicker"
               type="color"
               v-model="selectedColor"
-              @input="updateRGBColor"
+              @change="updateRGBColor"
               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               :disabled="isExecuting"
             />
