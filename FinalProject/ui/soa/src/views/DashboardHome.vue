@@ -138,7 +138,7 @@ onMounted(() => {
                 >
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                {{ device.location }}
+                Córdoba, Argentina
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                 {{ device.lastConnection.toLocaleString() }}

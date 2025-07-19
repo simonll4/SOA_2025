@@ -28,6 +28,11 @@ const pageTitle = computed(() => titleMap[route.path] || 'SOA Monitor')
 
 const toggleSidebar = () => (sidebarOpen.value = !sidebarOpen.value)
 const closeSidebar = () => (sidebarOpen.value = false)
+
+const handleLogout = () => {
+  logout()
+  router.push('/')
+}
 </script>
 
 <style scoped></style>
@@ -107,7 +112,7 @@ const closeSidebar = () => (sidebarOpen.value = false)
             </p>
           </div>
           <button
-            @click="logout"
+            @click="handleLogout"
             class="ml-auto p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

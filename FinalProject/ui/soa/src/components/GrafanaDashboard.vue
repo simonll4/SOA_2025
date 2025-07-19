@@ -53,9 +53,24 @@ onMounted(() => {
 
 <template>
   <div class="grafana-dashboard">
-    <div v-if="loading" class="loading">Cargando dashboard...</div>
+    <div v-if="loading" class="loading">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p>Cargando dashboard...</p>
+      </div>
+    </div>
     <div v-else-if="error" class="error">
-      {{ error }}
+      <div class="error-content">
+        <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+        <p>{{ error }}</p>
+      </div>
     </div>
     <div v-else class="dashboard-container">
       <iframe
@@ -81,7 +96,9 @@ onMounted(() => {
   height: 100%;
   min-height: calc(100vh - 160px);
   background-color: #0b1426;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-container {
@@ -89,6 +106,9 @@ onMounted(() => {
   height: 100%;
   min-height: inherit;
   background: transparent;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .loading,
@@ -99,10 +119,41 @@ onMounted(() => {
   height: 100%;
   min-height: 500px;
   font-size: 1.2em;
+  flex: 1;
+}
+
+.loading-content,
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  color: #e5e7eb;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #374151;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .error {
-  color: red;
+  color: #ef4444;
+}
+
+.error-icon {
+  width: 48px;
+  height: 48px;
+  color: #ef4444;
 }
 
 .grafana-iframe {
@@ -116,5 +167,91 @@ onMounted(() => {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  flex: 1;
+}
+
+/* Responsive design para móviles */
+@media (max-width: 768px) {
+  .grafana-dashboard {
+    min-height: calc(100vh - 200px);
+  }
+  
+  .grafana-iframe {
+    min-height: calc(100vh - 200px);
+    /* Permitir scroll en móviles para mejor experiencia */
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .loading,
+  .error {
+    min-height: 300px;
+    font-size: 1em;
+  }
+  
+  .loading-content,
+  .error-content {
+    padding: 1rem;
+  }
+  
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .error-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Responsive design para tablets y pantallas medianas */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grafana-dashboard {
+    min-height: calc(100vh - 180px);
+  }
+  
+  .grafana-iframe {
+    min-height: calc(100vh - 180px);
+  }
+  
+  .loading,
+  .error {
+    min-height: 400px;
+    font-size: 1.1em;
+  }
+  
+  .loading-spinner {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .error-icon {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Responsive design para pantallas medianas específicas */
+@media (min-width: 640px) and (max-width: 768px) {
+  .grafana-dashboard {
+    min-height: calc(100vh - 190px);
+  }
+  
+  .grafana-iframe {
+    min-height: calc(100vh - 190px);
+  }
+}
+
+/* Asegurar que el iframe se adapte correctamente en pantallas pequeñas */
+@media (max-width: 480px) {
+  .grafana-iframe {
+    /* Forzar el ancho completo y permitir zoom para mejor legibilidad */
+    width: 100vw;
+    height: calc(100vh - 200px);
+    min-height: 400px;
+    transform: scale(1);
+    transform-origin: top left;
+  }
 }
 </style>

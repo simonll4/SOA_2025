@@ -100,30 +100,25 @@ const setServoAngle = (angle: number) => {
 }
 
 const getServoArcPath = () => {
-  // Mapear servo angle (0-180°) a ángulos SVG
-  // El gauge debe ir de izquierda a derecha por arriba (semicírculo superior)
-  // 0° servo = izquierda (180° SVG)
-  // 180° servo = derecha (0° SVG)
-
   const centerX = 100
   const centerY = 100
   const radius = 80
 
-  // Punto de inicio (siempre en la izquierda, 0° servo)
-  const startAngleRad = Math.PI // 180° -> π rad
-  const startX = centerX + radius * Math.cos(startAngleRad)
-  const startY = centerY - radius * Math.sin(startAngleRad) // signo negativo para eje Y hacia abajo
+  // Punto de inicio fijo (siempre en la izquierda del semicírculo)
+  const startX = centerX + radius * Math.cos(Math.PI) // cos(π) = -1
+  const startY = centerY - radius * Math.sin(Math.PI) // sin(π) = 0, pero usamos - para ir hacia arriba
 
-  // Punto final basado en el ángulo del servo
-  // Convertir 0-180° servo a ángulo SVG (180-0°)
-  const endAngleSVG = 180 - servoAngle.value // en grados
-  const endAngleRad = (endAngleSVG * Math.PI) / 180
+  // Mapear servo angle (0-180°) a ángulos del semicírculo superior
+  // 0° servo = izquierda (π rad), 180° servo = derecha (0 rad)
+  const endAngleRad = Math.PI - (servoAngle.value * Math.PI) / 180
   const endX = centerX + radius * Math.cos(endAngleRad)
-  const endY = centerY - radius * Math.sin(endAngleRad) // signo negativo
+  const endY = centerY - radius * Math.sin(endAngleRad) // CLAVE: usar - para que vaya hacia arriba
 
-  // Flags del arco
-  const largeArcFlag = servoAngle.value > 180 ? 1 : 0 // nunca >180, pero por claridad
-  const sweepFlag = 1 // sentido horario (de izquierda a derecha por arriba)
+  // Determinar si necesitamos el arco largo
+  const largeArcFlag = 0 // Siempre usar el arco corto para el semicírculo
+  
+  // Sweep flag = 1 para ir en sentido horario por el semicírculo superior
+  const sweepFlag = 1
 
   return `M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${endX} ${endY}`
 }
@@ -179,7 +174,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Face Verification Modal -->
     <FaceVerificationModal
       :is-open="showFaceVerificationModal"
@@ -187,18 +182,18 @@ onMounted(() => {
       @verified="onFaceVerified"
     />
     <!-- Device Info -->
-    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-      <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
+    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4">
+      <h3 class="text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-2">
         Dispositivo Seleccionado
       </h3>
-      <p class="text-sm text-gray-600 dark:text-gray-300">{{ raspberryId }}</p>
+      <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300">{{ raspberryId }}</p>
     </div>
 
     <!-- Common Commands -->
     <div>
-      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+      <h3 class="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center">
         <svg
-          class="w-5 h-5 mr-2 text-green-500"
+          class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-green-500"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -213,22 +208,22 @@ onMounted(() => {
         Comandos Comunes
       </h3>
 
-      <div class="space-y-6">
+      <div class="space-y-4 sm:space-y-6">
         <!-- LED Toggle Button -->
-        <div class="flex flex-col items-center space-y-3">
-          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Control LED</h4>
+        <div class="flex flex-col items-center space-y-2 sm:space-y-3">
+          <h4 class="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Control LED</h4>
           <button
             @click="toggleLED"
             :disabled="isExecuting"
             :class="[
-              'relative inline-flex h-16 w-16 items-center justify-center rounded-full transition-all duration-500 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed',
+              'relative inline-flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full transition-all duration-500 shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed',
               ledState
                 ? 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-400 shadow-yellow-400/60 ring-4 ring-yellow-200/50'
                 : 'bg-gradient-to-r from-slate-400 to-slate-600 shadow-slate-400/30',
             ]"
           >
             <svg
-              class="w-8 h-8 transition-all duration-300"
+              class="w-6 h-6 sm:w-8 sm:h-8 transition-all duration-300"
               :class="ledState ? 'text-white drop-shadow-lg' : 'text-slate-200'"
               fill="none"
               stroke="currentColor"
@@ -250,7 +245,7 @@ onMounted(() => {
             <div v-if="ledState" class="absolute inset-2 rounded-full bg-white opacity-20"></div>
           </button>
           <span
-            class="text-sm font-medium transition-all duration-300"
+            class="text-xs sm:text-sm font-medium transition-all duration-300"
             :class="
               ledState
                 ? 'text-yellow-600 dark:text-yellow-400 font-bold'
@@ -262,12 +257,12 @@ onMounted(() => {
         </div>
 
         <!-- Servo Control with Circular Gauge -->
-        <div class="flex flex-col items-center space-y-4">
-          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Control Servo</h4>
+        <div class="flex flex-col items-center space-y-3 sm:space-y-4">
+          <h4 class="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Control Servo</h4>
           <div class="relative">
             <!-- Circular gauge background -->
-            <svg width="200" height="120" viewBox="0 0 200 120" class="overflow-visible">
-              <!-- Background arc -->
+            <svg width="160" height="96" viewBox="0 0 200 120" class="overflow-visible sm:w-[200px] sm:h-[120px]">
+              <!-- Background arc (semicírculo completo) -->
               <path
                 d="M 20 100 A 80 80 0 0 1 180 100"
                 fill="none"
@@ -275,14 +270,13 @@ onMounted(() => {
                 stroke-width="8"
                 class="dark:stroke-gray-600"
               />
-              <!-- Progress arc -->
+              <!-- Progress arc (se actualiza dinámicamente) -->
               <path
                 :d="getServoArcPath()"
                 fill="none"
                 stroke="url(#servoGradient)"
                 stroke-width="8"
                 stroke-linecap="round"
-                class="transition-all duration-300"
               />
               <!-- Gradient definition -->
               <defs>
@@ -307,7 +301,7 @@ onMounted(() => {
             <!-- Servo angle input -->
             <div class="absolute inset-0 flex items-center justify-center">
               <div class="text-center">
-                <div class="text-2xl font-bold text-gray-900 dark:text-white">
+                <div class="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                   {{ servoAngle }}°
                 </div>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Servo</div>
@@ -329,20 +323,20 @@ onMounted(() => {
               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 slider"
             />
             <div class="flex justify-between text-xs text-gray-500 mt-1">
-              <span>0°</span>
+              <span>00</span>
               <span>90°</span>
               <span>180°</span>
             </div>
           </div>
 
           <!-- Quick angle buttons -->
-          <div class="flex space-x-2">
+          <div class="flex flex-wrap justify-center gap-1 sm:gap-2">
             <button
               v-for="angle in [0, 45, 90, 135, 180]"
               :key="angle"
               @click="setServoAngle(angle)"
               :disabled="isExecuting"
-              class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
+              class="px-2 sm:px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
             >
               {{ angle }}°
             </button>
@@ -350,13 +344,13 @@ onMounted(() => {
         </div>
 
         <!-- RGB Color Picker -->
-        <div class="flex flex-col items-center space-y-4">
-          <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Control RGB</h4>
+        <div class="flex flex-col items-center space-y-3 sm:space-y-4">
+          <h4 class="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Control RGB</h4>
 
           <!-- Color preview circle -->
           <div class="relative">
             <div
-              class="w-20 h-20 rounded-full border-4 border-white shadow-lg cursor-pointer transform hover:scale-105 transition-transform"
+              class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white shadow-lg cursor-pointer transform hover:scale-105 transition-transform"
               :style="{ backgroundColor: selectedColor }"
               @click="colorPicker?.click()"
             >
@@ -376,7 +370,7 @@ onMounted(() => {
           </div>
 
           <!-- RGB values display -->
-          <div class="flex space-x-4 text-sm">
+          <div class="flex space-x-3 sm:space-x-4 text-xs sm:text-sm">
             <div class="text-center">
               <div class="font-medium text-red-500">R</div>
               <div class="text-gray-700 dark:text-gray-300">{{ rgbValues.r }}</div>
@@ -392,13 +386,13 @@ onMounted(() => {
           </div>
 
           <!-- Quick color presets -->
-          <div class="flex space-x-2">
+          <div class="flex flex-wrap justify-center gap-1 sm:gap-2">
             <button
               v-for="(color, name) in colorPresets"
               :key="name"
               @click="setPresetColor(color)"
               :disabled="isExecuting"
-              class="w-8 h-8 rounded-full border-2 border-white shadow-md hover:scale-110 transition-transform"
+              class="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-white shadow-md hover:scale-110 transition-transform"
               :style="{ backgroundColor: color }"
               :title="name"
             ></button>
@@ -409,9 +403,9 @@ onMounted(() => {
 
     <!-- Critical Commands -->
     <div>
-      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+      <h3 class="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center">
         <svg
-          class="w-5 h-5 mr-2 text-red-500"
+          class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-red-500"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -426,17 +420,17 @@ onMounted(() => {
         Comandos Críticos
       </h3>
 
-      <div class="grid grid-cols-1 gap-3">
+      <div class="grid grid-cols-1 gap-2 sm:gap-3">
         <button
           v-for="command in criticalCommands"
           :key="command.id"
           @click="handleCriticalCommand(command)"
           :disabled="isExecuting"
-          class="flex items-center justify-between p-4 border-2 border-red-200 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+          class="flex items-center justify-between p-3 sm:p-4 border-2 border-red-200 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
         >
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
             <svg
-              class="w-5 h-5 text-red-600 dark:text-red-400"
+              class="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -445,16 +439,16 @@ onMounted(() => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
               />
             </svg>
-            <div class="text-left">
-              <div class="font-medium text-gray-900 dark:text-white">{{ command.label }}</div>
-              <div class="text-sm text-gray-600 dark:text-gray-400">{{ command.description }}</div>
+            <div class="text-left min-w-0 flex-1">
+              <div class="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">{{ command.label }}</div>
+              <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">{{ command.description }}</div>
             </div>
           </div>
-          <div class="flex items-center space-x-2 text-red-600 dark:text-red-400">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center space-x-1 sm:space-x-2 text-red-600 dark:text-red-400 flex-shrink-0">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -462,7 +456,8 @@ onMounted(() => {
                 d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
               />
             </svg>
-            <span class="text-xs font-medium">Requiere verificación</span>
+            <span class="text-xs font-medium hidden sm:inline">Requiere verificación</span>
+            <span class="text-xs font-medium sm:hidden">Verificar</span>
           </div>
         </button>
       </div>
@@ -470,18 +465,18 @@ onMounted(() => {
 
     <!-- Command History -->
     <div v-if="commandHistory.length > 0">
-      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Historial de Comandos</h3>
+      <h3 class="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">Historial de Comandos</h3>
 
-      <div class="space-y-2 max-h-40 overflow-y-auto">
+      <div class="space-y-2 max-h-32 sm:max-h-40 overflow-y-auto">
         <div
           v-for="(historyItem, index) in commandHistory.slice(-5)"
           :key="index"
-          class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded text-sm"
+          class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded text-xs sm:text-sm"
         >
-          <span class="text-gray-900 dark:text-white">{{ historyItem.command }}</span>
+          <span class="text-gray-900 dark:text-white truncate flex-1 mr-2">{{ historyItem.command }}</span>
           <span
             :class="[
-              'px-2 py-1 rounded text-xs',
+              'px-2 py-1 rounded text-xs flex-shrink-0',
               historyItem.status === 'success'
                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                 : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
