@@ -5,6 +5,7 @@ import { useRoute, RouterLink, RouterView } from 'vue-router'
 import { useKeycloakAuth } from '@/composables/keycloak/useKeycloakAuth'
 import useRaspberryStatus from '@/composables/services/useRaspberryDevices'
 import { useTheme } from '@/composables/useTheme'
+import router from '@/router'
 
 const { initKeycloak } = useKeycloakAuth()
 const { connectWebSocket } = useRaspberryStatus()

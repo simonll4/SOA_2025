@@ -1,45 +1,62 @@
 SERVICIOS PRINCIPALES - ARQUITECTURA SOA
 
---------------------------------------------------
-
-1. face_profile_service
-   - Procesa imágenes de rostros para crear y almacenar embeddings faciales (vectores).
-   - Utiliza Flask, PostgreSQL (pgvector) y autenticación con Keycloak.
-
-2. face_recognition_service
-   - Realiza reconocimiento facial en tiempo real.
-   - Expone una API REST para comparar imágenes y verificar identidades.
-   - Utiliza Flask, dlib, face_recognition y PostgreSQL (pgvector).
-   - Integración con Keycloak para autenticación.
-
-3. keycloak_sync_service
-   - Sincroniza usuarios y roles desde Keycloak a una base de datos local.
-   - Permite mantener actualizada la información de usuarios para otros servicios.
-   - Implementado en Python, usa SQLAlchemy y PostgreSQL.
-   - Scheduler interno para sincronización periódica.
-
-4. mqtt_proxy_service
-   - Proxy seguro para comandos MQTT entre frontend y dispositivos.
-   - Valida y enruta mensajes MQTT autenticados.
-   - Implementado en Flask y paho-mqtt.
-   - Integración con Keycloak para control de acceso.
-
---------------------------------------------------
-
-1. face_profile_service (API-REST)
-    - Procesa imágenes de rostros para crear y almacenar embeddings faciales (vectores).
-    - Integración con Keycloak para autenticación y autorizacion.
-
-2. face_recognition_service (API-REST)
-   - Realiza reconocimiento facial en tiempo real.
-   - Genera un token FVT para la verificación de identidad.
-   - Integración con Keycloak para autenticación y autorizacion.
-
-3. keycloak_sync_service
+1. keycloak_sync_service
    - Sincroniza informacion de usuarios desde Keycloak a una base de datos local.
-   - Scheduler interno para sincronización periódica.
+   - Scheduler interno para sincronización periódica.( simplemente se encarga de hacer polling, 
+   donde cuenta con un  scheduler interno que consulta periódicamente a Keycloak para detectar cambios 
+   en usuarios, y asi mantenener actualizada la base de datos local)
+
+2.DB Replica
+
+PostgreSQL como base principal
+- Usamos PostgreSQL como base de datos relacional donde Sincronizamos los datos de los usuarios de keycloak
+
+Extensión con pgvector
+pgvector es una extensión de PostgreSQL que permite almacenar y buscar vectores numéricos dentro de la base de datos.
+Y luego podés conectar con tu contexto:
+En nuestro caso, lo usamos para guardar y comparar embeddings faciales (representaciones numéricas de rostros)
+
+
+2. face_profile_service (API-REST)
+    - Procesa imágenes de rostros para crear y almacenar embeddings faciales.
+    - Integración con Keycloak para autenticación y autorización mediante JWT tokens.(valida tokens 
+    JWT de Keycloak antes de procesar cualquier request, asegurando que solo usuarios autenticados y con permisos 
+    correctos puedan acceder)
+
+3. face_recognition_service (API-REST)
+   - Realiza reconocimiento facial en tiempo real.
+   - Genera un token FVT para la verificación de identidad.(Este token tiene una vida útil de pocos segundos
+    para evitar su reutilización y garantizar verificación facial en tiempo real)
+   - Integración con Keycloak para autenticación y autorización mediante JWT tokens.
 
 4. mqtt_proxy_service (API-REST)
-   - Proxy seguro para comandos MQTT entre frontend y dispositivos.
+   - Proxy seguro para comandos MQTT.
    - Utiliza el token FVT generado por face_recognition_service.
-   - Integración con Keycloak para autenticación y autorizacion.
+   - Integración con Keycloak para autenticación y autorización mediante JWT tokens.
+
+En lugar de que el frontend se conecte directamente al broker MQTT, creamos este proxy 
+ para añadir una capa de seguridad, actando como intermediario: recibiendo el topico
+y el mensaje a publicar.
+
+
+
+DIAGRAMA FLUJO
+"Este esquema resume el flujo y comunicación entre los distintos servicios. 
+ - Keycloak Sync mantiene actualizada la base de datos replicada mediante polling. 
+ - La aplicación web se autentica con Keycloak y luego puede interactuar con: 
+   - face profile 
+   - face recognition
+      El servicio identifica el embedding más similar entre los registrados por 
+      el usuario autenticado, seleccionando el que presenta la menor distancia euclidiana 
+      y la mayor similitud coseno respecto al embedding extraído de la imagen. Luego, 
+      aplica una doble validación, verificando que se superen los umbrales configurados 
+      de similitud y confianza, para confirmar que el rostro corresponde efectivamente al usuario.
+
+   - mqtt proxy 
+
+ARQUITECTURA
+"Este diagrama muestra nuestra arquitectura SOA distribuida compuesta por 4 nodos en una 
+red LAN virtual, una raspberry y 3VMs con ip publica para accederlas desde internet. 
+
+Cada VM tiene servicios específicos con responsabilidades bien definidas:...
+

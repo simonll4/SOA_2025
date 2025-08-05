@@ -1,0 +1,12 @@
+PostgreSQL como base principal
+- Usamos PostgreSQL como base de datos relacional donde Sincronizamos los datos de los usuarios de keycloak
+
+Extensión con pgvector
+pgvector es una extensión de PostgreSQL que permite almacenar y buscar vectores numéricos dentro de la base de datos.
+Y luego podés conectar con tu contexto:
+En nuestro caso, lo usamos para guardar y comparar embeddings faciales: vectores de 128 
+dimensiones que representan características únicas de un rostro.
+
+Extensión con pgvector
+- Permite almacenar y comparar embeddings faciales (representaciones numéricas de rostros) directamente en la db
+- Transforma PostgreSQL en una base capaz de realizar búsquedas vectoriales eficientes.

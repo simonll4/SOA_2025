@@ -82,7 +82,7 @@ const closeCommandPanel = () => (showCommandPanel.value = false)
               Monitoreo - {{ deviceInfo?.name || deviceId }}
             </h1>
             <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
-              {{ deviceInfo?.location || 'Ubicación no especificada' }}
+              Córdoba, Argentina
             </p>
           </div>
         </div>
